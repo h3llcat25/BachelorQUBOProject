@@ -1,0 +1,35 @@
+digraph G {
+    C1 [type=C]
+    C2 [type=C]
+    C3 [type=C]
+    C4 [type=C]
+    C5 [type=C]
+    C6 [type=C]
+    C7 [type=C]
+    
+    E1 [type=E]
+    E2 [type=E]
+    E3 [type=E]
+    E4 [type=E]
+ 
+    
+    C8 [type=C, color=red] 
+
+    R1 [type=R]
+    
+        
+    C1 -> R1
+    C2 -> R1
+    C3 -> R1
+    C4 -> R1
+    C5 -> R1
+    C6 -> R1
+    C7 -> R1
+    
+    E1 -> R1
+    E2 -> R1
+    E3 -> R1
+    E4 -> R1
+    
+    R1 -> C8   
+}

@@ -1,0 +1,22 @@
+digraph "" {
+	E0	[type=E];
+	R1	[type=R];
+	E0 -> R1	[key=0];
+	E1	[type=E];
+	E1 -> R1	[key=0];
+	E2	[type=E];
+	R0	[type=R];
+	E2 -> R0	[key=0];
+	R2	[type=R];
+	E2 -> R2	[key=0];
+	C0	[type=C];
+	R0 -> C0	[key=0];
+	R1 -> C0	[key=0];
+	C2	[color=red,
+		type=C];
+	R2 -> C2	[key=0];
+	C0 -> R2	[key=0];
+	C1	[type=C];
+	C1 -> R1	[key=0];
+	C2 -> R0	[key=0];
+}

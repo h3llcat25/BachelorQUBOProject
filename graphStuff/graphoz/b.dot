@@ -1,0 +1,18 @@
+digraph G {
+    A [type=E]
+    B [type=C]
+    C [type=E]
+    D [type=C]
+    E [type=R]
+    F [type=R]
+    G [type=C]
+    H [color=red, type=C]
+    
+    A -> E
+    B -> E
+    C -> F
+    D -> F
+    
+    E -> G
+    F -> H
+}

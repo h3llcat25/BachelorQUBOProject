@@ -1,0 +1,26 @@
+digraph G {
+E1 [type=E];
+E2 [type=E];
+E3 [type=E];
+R1 [type=R];
+R2 [type=R];
+R3 [type=R];
+R4 [type=R];
+C1 [type=C];
+C2 [type=C];
+C3 [type=C];
+C4 [type=C];
+C5 [type=C];
+E2 -> R3;
+E3 -> R4;
+R3 -> C5;
+R4 -> C5;
+C5 -> R1;
+E1 -> R1;
+E1 -> R2;
+R1 -> C1;
+R1 -> C2;
+R2 -> C2;
+R2 -> C3;
+R2 -> C4;
+}
