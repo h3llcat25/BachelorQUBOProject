@@ -1,5 +1,5 @@
 import random
-import randomGraphGenerator
+from graphStuff import randomGraphGenerator
 
 # Define a list of values with associated probabilities
 values = [1, 2, 3, 4]
