@@ -1,0 +1,84 @@
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Citrate_cycle.dot
+Matching Nodes: ['C00074', 'C00036']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Citrate_cycle_marked.dot
+Matching Nodes: ['C00074', 'C00036']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Galactose.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Glycerolipid.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Glycerolipid_marked.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Glycine_serine_threonine.dot
+Matching Nodes: ['C01005']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\modified_Citrate_cycle_marked.dot
+Matching Nodes: ['C00074', 'C00036']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Pentose_phosphate.dot
+Matching Nodes: ['C00199', 'C05382', 'C00119']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Polyketide.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Purine.dot
+Matching Nodes: ['C00119']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Pyruvate.dot
+Matching Nodes: ['C00074', 'C00036']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\xtra_modified_Citrate_cycle_marked.dot
+Matching Nodes: ['C00074', 'C00036']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\xtra_modified_Glycerolipid_marked.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Citrate_cycle.dot
+Matching Nodes: ['C00074', 'C00036']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Galactose.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Glycerolipid.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Glycine_serine_threonine.dot
+Matching Nodes: ['C01005']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Pentose_phosphate.dot
+Matching Nodes: ['C00199', 'C05382', 'C00119']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Purine.dot
+Matching Nodes: ['C00119']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Pyruvate.dot
+Matching Nodes: ['C00074', 'C00036']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Citrate_cycle.dot
+Matching Nodes: ['C00074', 'C00036']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Galactose.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Glycerolipid.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Glycine_serine_threonine.dot
+Matching Nodes: ['C01005']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Pentose_phosphate.dot
+Matching Nodes: ['C00199', 'C05382', 'C00119']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Purine.dot
+Matching Nodes: ['C00119']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Pyruvate.dot
+Matching Nodes: ['C00074', 'C00036']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\test.dot
+Matching Nodes: ['C00074', 'C00036']
+

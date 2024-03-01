@@ -1,14 +1,15 @@
-import sympy
-import numpy as np
 import os
-import pydot
-from gurobi_optimods.qubo import solve_qubo
-import qubo_term_from_graph_generator as qtfgg
-import qMatrixBuilder as qmtrxb
 
-#from dwave.samplers import SimulatedAnnealingSampler
-#from dwave.system import DWaveSampler, FixedEmbeddingComposite, LeapHybridSampler
-#import dimod
+import numpy as np
+import pydotplus
+import sympy
+from dwave.system import DWaveSampler, FixedEmbeddingComposite
+from gurobi_optimods.qubo import solve_qubo
+from gurobipy import Model, GRB, QuadExpr
+
+from qMatrixBuilder import *
+from act_qubo_term_generation import *
+
 
 # from dwave_qbsolv import QBSolv
 
@@ -44,8 +45,8 @@ def just_simplifying_objective_function(input_string):
 def node_to_binvalue_assignment_for_result(bin_var_dict, solution_array):
     # Filter the dictionary to only include keys before a key that starts with 'extra Var for'
     filtered_keys = []
-    for k in bin_var_dict.keys():
-        if str(k).startswith('extra Var for'):
+    for k in bin_var_dict.keys():  # bin_var_dict ist das Array
+        if k.startswith('extra Var for'):
             break
         filtered_keys.append(k)
 
@@ -60,43 +61,214 @@ def node_to_binvalue_assignment_for_result(bin_var_dict, solution_array):
     return output_dict
 
 
-def modify_dot_graph(dot_file, dictionary):
+# bin_var_dict ist ein Dictionary <Node : Bin_var> wo alle Variablen aus dem Graph her mit den Knoten stehen.
+# solution dict ist ein dictionary <Bin_var : solutionValue (-0, 1)>
+def node_to_solutionsValue_assignment_for_result(bin_var_dict, solution_dict):
+    node_to_sol = {}
 
+    for key, value in bin_var_dict.items():
+        if key.startswith('extra Var for'):
+            break
+        solution_val = solution_dict.get(value)
+        node_to_sol[key] = solution_val
+
+    return node_to_sol
+
+
+def modify_dot_graph(graph, solution_dictionary, dot_file):
     # Load the .dot graph file
-    graph = pydot.graph_from_dot_file(dot_file)[0]
-    attribute="color"
-    color="purple"
+    rimColorAttribute = "color"
+    fillColorAttribute = "fillcolor"
+    styleAttribute = "style"
+    filledStyle = "filled"
+    rimColor = "purple"
+    fillColor = "red"
+    targetFillColor = "blue"
+
+    enzymeDamage = 0
+    compoundDamage = 0
 
     # Iterate over the dictionary and modify the graph
-    for key, value in dictionary.items():
-        if value == 1:
+    for key, value in solution_dictionary.items():
+        if value == 1 or value == 1.0:
             try:
-                node = graph.get_node(key)[0]
+                node = graph.get_node(key)
+                if not node:
+                    node = graph.get_node(f"\"{key}\"")
+                node = node[0]
                 if len(node.get_attributes()) == 1 and 'type' in node.get_attributes():
-                    node.set(attribute, color)
+                    node.set(rimColorAttribute, rimColor)
+                    node.set(fillColorAttribute, fillColor)
+                    compoundDamage += 1
+                else:
+                    node.set(fillColorAttribute, targetFillColor)
+                node.set(styleAttribute, filledStyle)
             except IndexError:
-                node = graph.get_node(f'"{key}"')[0]
+                node = graph.get_node(f'\"{key}\"')[0]
+                enzymeDamage += 1
                 if len(node.get_attributes()) == 1 and 'type' in node.get_attributes():
-                    node.set(attribute, color)
+                    node.set(rimColorAttribute, rimColor)
+                    node.set(fillColorAttribute, fillColor)
+                else:
+                    node.set(fillColorAttribute, targetFillColor)
+                node.set(styleAttribute, filledStyle)
 
         # Create a new filename with 'modified_' prefix
     base_name = os.path.basename(dot_file)
     dir_name = os.path.dirname(dot_file)
-    new_filename = f"modified_{base_name}"
+    new_filename = f"xtra_modified_{base_name}"
     new_filepath = os.path.join(dir_name, new_filename)
+
+    print(f'Enzyme Damage: {enzymeDamage}')
+    print(f'Compound Damage: {compoundDamage}')
 
     # Write the modified graph back to the new .dot file
     graph.write(new_filepath)
 
 
-def param_search_and_auto_solver_auto_penalty(file_path):
-    bin_vars_dict, optimization_term = qtfgg.generating_qubo_term_from_graph(file_path)
+def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): # (bin_vars_dict, modified_opt_term,
+    # modified_damage_opt_term) bin_vars_dict hat die namen der nodes und die variablen, die anderen beiden haben einfach expressions.
+    m = Model()
+
+    # Add binary variables to the model
+    variables = {}
+    reverse_mapping = {}
+
+    for key, value in input_dict.items():
+        variables[value] = m.addVar(vtype=GRB.BINARY, name=value)
+        reverse_mapping[value] = key
+    m.update()
+
+    # Convert the sympy expression to a dictionary
+    objective_dict_whole = objective_expr.as_coefficients_dict()
+    if damage_expression is not None:
+        objective_dict_damage = damage_expression.as_coefficients_dict()
+
+        # Merge the two dictionaries
+        for term, coeff in objective_dict_damage.items():
+            if term in objective_dict_whole:
+                objective_dict_whole[term] += coeff
+            else:
+                objective_dict_whole[term] = coeff
+
+    # Set the objective
+    objective = QuadExpr()
+
+    for term, coeff in objective_dict_whole.items():
+        if isinstance(term, sympy.Symbol):  # linear term
+            objective.add(variables[str(term)], coeff)
+        elif len(term.args) == 2:  # quadratic term
+            var1, var2 = map(str, term.args)
+            if var1 == var2:
+                print(var1)
+            if var2 == "2":
+                objective.add(variables[var1], coeff)
+            else:
+                objective.add(variables[var1] * variables[var2], coeff)
+        else:  # constant term
+            objective.addConstant(coeff)
+    m.setObjective(objective, GRB.MINIMIZE)
+
+    # Solve the model
+    m.optimize()
+
+    # Print the solution
+    solution = {}
+    for var_name, var in variables.items():
+        if not reverse_mapping[var_name].startswith("extra Var"):
+            solution[reverse_mapping[var_name]] = var.X
+    return solution
+
+
+# def param_search_and_auto_solver_auto_penalty(file_path):
+#     bin_vars_dict, optimization_term = generating_qubo_term_from_graph(file_path)
+#     modified_opt_term = just_simplifying_objective_function(optimization_term)
+#
+#     print(modified_opt_term)
+#
+#     qmatrix = generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
+#     result = solve_qubo(qmatrix)
+#
+#     nodeNames_to_binaryMap = node_to_binvalue_assignment_for_result(bin_vars_dict, result.solution)
+#
+#     # Print the solution
+#     print(nodeNames_to_binaryMap)
+#     print(result.solution)
+#     print(result.objective_value)
+#     modify_dot_graph(file_path, nodeNames_to_binaryMap)
+
+
+# def param_search_and_auto_solver_auto_penalty_gurobipy_model(file_path):
+#     bin_vars_dict, optimization_term = generating_qubo_term_from_graph(file_path)
+#     modified_opt_term = just_simplifying_objective_function(optimization_term)
+#
+#     solution_dict = solve_qubo_with_gurobi(bin_vars_dict, modified_opt_term)
+#
+#     # nodeNames_to_binaryMap = node_to_binvalue_assignment_for_result(bin_vars_dict, result.solution)
+#
+#     # Print the solution
+#     # print(nodeNames_to_binaryMap)
+#     # print(result.solution)
+#     # print(result.objective_value)
+#     modify_dot_graph(file_path, solution_dict)
+#
+
+def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes(file_path):
+    bin_vars_dict, optimization_term, output_damage_only, graph = generating_qubo_term_from_graph_two_part(file_path)
     modified_opt_term = just_simplifying_objective_function(optimization_term)
+    modified_damage_opt_term = sympy.sympify(output_damage_only)
 
-    print(modified_opt_term)
+    solution_dict = solve_qubo_with_gurobi(bin_vars_dict, modified_opt_term, modified_damage_opt_term)
+    # nodeNames_to_binaryMap = node_to_binvalue_assignment_for_result(bin_vars_dict, result.solution)
 
-    qmatrix = qmtrxb.generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
-    result = solve_qubo(qmatrix)
+    # Print the solution
+    # print(nodeNames_to_binaryMap)
+    # print(result.solution)
+    # print(result.objective_value)
+    modify_dot_graph(graph, solution_dict, file_path)
+
+
+# TODO: Aktuell.
+def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_just_matrix(file_path):
+    bin_vars_dict, optimization_term, output_damage_only = generating_qubo_term_from_graph_two_part(file_path)
+    modified_opt_term = just_simplifying_objective_function(optimization_term)
+    modified_damage_opt_term = sympy.sympify(output_damage_only)
+
+    qmatrix = generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
+    qmatrix_damage = generate_final_np_matrix(bin_vars_dict, str(modified_damage_opt_term))
+
+    cmplt_matrix = add_damage_matrix_to_q_matrix(qmatrix, qmatrix_damage)
+
+    qubo_dict = {}
+    n = cmplt_matrix.shape[0]  # Assuming a square matrix
+
+    for i in range(n):
+        for j in range(i, n):  # Only need to iterate over the upper triangle due to symmetry
+            if cmplt_matrix[i][j] != 0:  # Only consider non-zero entries
+                qubo_dict[(i, j)] = cmplt_matrix[i][j]
+
+    return qubo_dict, list(bin_vars_dict.values())
+
+    solution_dict = solve_qubo_with_gurobi(bin_vars_dict, modified_opt_term, modified_damage_opt_term)
+
+    # nodeNames_to_binaryMap = node_to_binvalue_assignment_for_result(bin_vars_dict, result.solution)
+
+    # Print the solution
+    # print(nodeNames_to_binaryMap)
+    # print(result.solution)
+    # print(result.objective_value)
+    modify_dot_graph(file_path, solution_dict)
+
+
+def param_search_and_auto_solver_auto_penalty_two_parted(file_path):
+    bin_vars_dict, optimization_term, output_damage_only = generating_qubo_term_from_graph_two_part(file_path)
+    modified_opt_term = just_simplifying_objective_function(optimization_term)
+    modified_damage_opt_term = just_simplifying_objective_function(output_damage_only)
+
+    qmatrix = generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
+    damage_matrix = generate_final_np_matrix(bin_vars_dict, str(modified_damage_opt_term))
+    mainQmatrix = add_damage_matrix_to_q_matrix(qmatrix, damage_matrix)
+    result = solve_qubo(mainQmatrix)
 
     nodeNames_to_binaryMap = node_to_binvalue_assignment_for_result(bin_vars_dict, result.solution)
 
@@ -107,43 +279,52 @@ def param_search_and_auto_solver_auto_penalty(file_path):
     modify_dot_graph(file_path, nodeNames_to_binaryMap)
 
 
-def param_search_and_auto_solver_with_manual_penalty_setting(is_gurobi, file_path, k1, k2, k3, k4, k5=1, k6=1):
-    bin_vars_dict, optimization_term = qtfgg.generating_qubo_term_from_graph(file_path)
-    modified_opt_term = replace_variables(optimization_term, k1, k2, k3, k4, k5, k6)
+# def param_search_and_auto_solver_with_manual_penalty_setting(is_gurobi, file_path, k1, k2, k3, k4, k5=1, k6=1):
+#     bin_vars_dict, optimization_term = generating_qubo_term_from_graph(file_path)
+#     modified_opt_term = replace_variables(optimization_term, k1, k2, k3, k4, k5, k6)
+#
+#     print(modified_opt_term)
+#
+#     qmatrix = generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
+#
+#     if is_gurobi:
+#         result = solve_qubo(qmatrix)
+#
+#         nodeNames_to_binaryMap = node_to_binvalue_assignment_for_result(bin_vars_dict, result.solution)
+#
+#         # Print the solution
+#         print(nodeNames_to_binaryMap)
+#         # print(result.solution)
+#         print(result.objective_value)
+#     else:
+#         # Populate the matrix with values from the dictionary
+#         matrix_dict = {index: value for index, value in np.ndenumerate(qmatrix) if value != 0}
 
-    print(modified_opt_term)
+# Use the QBSolv module to solve the QUBO problem
+# response = QBSolv().sample_qubo(matrix_dict)
 
-    qmatrix = qmtrxb.generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
+# Print the samples and energies
+# print("samples=" + str(list(response.samples())))
+# print("energies=" + str(list(response.data_vectors['energy'])))
 
-    if is_gurobi:
-        result = solve_qubo(qmatrix)
-
-        nodeNames_to_binaryMap = node_to_binvalue_assignment_for_result(bin_vars_dict, result.solution)
-
-        # Print the solution
-        print(nodeNames_to_binaryMap)
-        # print(result.solution)
-        print(result.objective_value)
-    else:
-        # Populate the matrix with values from the dictionary
-        matrix_dict = {index: value for index, value in np.ndenumerate(qmatrix) if value != 0}
-
-        # Use the QBSolv module to solve the QUBO problem
-        #response = QBSolv().sample_qubo(matrix_dict)
-
-        # Print the samples and energies
-        #print("samples=" + str(list(response.samples())))
-        #print("energies=" + str(list(response.data_vectors['energy'])))
 
 # MAIN
 def main():
-    param_search_and_auto_solver_auto_penalty(
+    # param_search_and_auto_solver_auto_penalty(
+    # param_search_and_auto_solver_auto_penalty_two_parted(
+    # param_search_and_auto_solver_auto_penalty_gurobipy_model(
+    param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes(
+        # "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
+        # "\\Glycerolipid_marked.dot")
         "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
         "\\Citrate_cycle_marked.dot")
-
-        #"C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\largeDots\\hsa_filtering_dot"
-        #"\\Nucleotide metabolism_marked.dot")
+    # "\\Biosynthesis of amino acids marked.dot")
 
 
 if __name__ == '__main__':
     main()
+
+# embedding = self.graph_embedder.get_embedding_for_bundle(Q,bundle)
+#             sampler = FixedEmbeddingComposite(DWaveSampler(), embedding)
+#             sampleset = sampler.sample_qubo(Q, num_reads=self.annealing_runs)
+#             response = sampleset.first.sample

@@ -1,0 +1,66 @@
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Biosynthesis of amino acids.dot
+Matching Nodes: ['C00233', 'C00119', 'C00082', 'C00183', 'C01005', 'C00074', 'C01165', 'C00148', 'C00036', 'C00199', 'C00407', 'C00049', 'C00236', 'C05382', 'C00327', 'C03287']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Biosynthesis of cofactors.dot
+Matching Nodes: ['C00183', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Carbon metabolism.dot
+Matching Nodes: ['C00119', 'C01005', 'C00074', 'C00036', 'C00199', 'C00236', 'C05382', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Nucleotide metabolism.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Purine.dot
+Matching Nodes: ['C00119']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Biosynthesis of amino acids marked.dot
+Matching Nodes: ['C00233', 'C00119', 'C00082', 'C00183', 'C01005', 'C00074', 'C01165', 'C00148', 'C00036', 'C00199', 'C00407', 'C00049', 'C00236', 'C05382', 'C00327', 'C03287', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Biosynthesis of amino acids.dot
+Matching Nodes: ['C00233', 'C00119', 'C00082', 'C00183', 'C01005', 'C00074', 'C01165', 'C00148', 'C00036', 'C00199', 'C00407', 'C00049', 'C00236', 'C05382', 'C00327', 'C03287', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Biosynthesis of cofactors.dot
+Matching Nodes: ['C00183', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Carbon metabolism.dot
+Matching Nodes: ['C00119', 'C01005', 'C00074', 'C00036', 'C00199', 'C00049', 'C00236', 'C05382', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\modified_Biosynthesis of amino acids marked.dot
+Matching Nodes: ['C00233', 'C00119', 'C00082', 'C00183', 'C01005', 'C00074', 'C01165', 'C00148', 'C00036', 'C00199', 'C00407', 'C00049', 'C00236', 'C05382', 'C00327', 'C03287', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\modified_Nucleotide metabolism_marked.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Nucleotide metabolism.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Nucleotide metabolism_marked.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Purine.dot
+Matching Nodes: ['C00119']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\test.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\xtra_modified_Biosynthesis of amino acids marked.dot
+Matching Nodes: ['C00233', 'C00119', 'C00082', 'C00183', 'C01005', 'C00074', 'C01165', 'C00148', 'C00036', 'C00199', 'C00407', 'C00049', 'C00236', 'C05382', 'C00327', 'C03287', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\xtra_modified_Nucleotide metabolism_marked.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Biosynthesis of amino acids.dot
+Matching Nodes: ['C00233', 'C00119', 'C00082', 'C00183', 'C01005', 'C00074', 'C01165', 'C00148', 'C00036', 'C00199', 'C00407', 'C00049', 'C00236', 'C05382', 'C00327', 'C03287', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Biosynthesis of cofactors.dot
+Matching Nodes: ['C00183', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Carbon metabolism.dot
+Matching Nodes: ['C00119', 'C01005', 'C00074', 'C00036', 'C00199', 'C00049', 'C00236', 'C05382', 'C00169']
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Nucleotide metabolism.dot
+Matching Nodes: []
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Purine.dot
+Matching Nodes: ['C00119']
+
