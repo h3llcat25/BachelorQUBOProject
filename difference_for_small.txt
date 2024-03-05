@@ -1,0 +1,84 @@
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Citrate_cycle.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 61, 66, 144)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Citrate_cycle_marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 61, 66, 144)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Galactose.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 91, 89, 209)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Glycerolipid.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 36, 16, 58)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Glycerolipid_marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 36, 16, 58)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Glycine_serine_threonine.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 94, 64, 180)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\modified_Citrate_cycle_marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 61, 66, 144)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Pentose_phosphate.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 81, 88, 188)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Polyketide.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 13, 3, 19)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Purine.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 225, 214, 524)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\Pyruvate.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 114, 127, 259)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\xtra_modified_Citrate_cycle_marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 61, 66, 144)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\eco_filtering_dot\xtra_modified_Glycerolipid_marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 36, 16, 58)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Citrate_cycle.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 64, 75, 155)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Galactose.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 70, 75, 167)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Glycerolipid.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 51, 35, 97)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Glycine_serine_threonine.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 102, 77, 199)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Pentose_phosphate.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 68, 76, 162)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Purine.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 229, 238, 544)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\hsa_filtering_dot\Pyruvate.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 79, 71, 165)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Citrate_cycle.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 64, 75, 155)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Galactose.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 70, 75, 167)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Glycerolipid.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 51, 35, 97)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Glycine_serine_threonine.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 111, 88, 220)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Pentose_phosphate.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 68, 76, 162)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Purine.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 235, 241, 555)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\Pyruvate.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 79, 71, 165)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\smallDots\mmu_filtering_dot\test.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 79, 71, 165)
+

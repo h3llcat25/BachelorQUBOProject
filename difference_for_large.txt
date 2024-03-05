@@ -1,0 +1,66 @@
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Biosynthesis of amino acids.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 306, 172, 570)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Biosynthesis of cofactors.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 452, 183, 789)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Carbon metabolism.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 195, 176, 408)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Nucleotide metabolism.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 211, 238, 542)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\eco_filterin_dot\Purine.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 225, 214, 524)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Biosynthesis of amino acids marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 147, 98, 288)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Biosynthesis of amino acids.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 147, 98, 288)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Biosynthesis of cofactors.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 327, 126, 560)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Carbon metabolism.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 182, 136, 356)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\modified_Biosynthesis of amino acids marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 147, 98, 288)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\modified_Nucleotide metabolism_marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 215, 254, 552)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Nucleotide metabolism.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 215, 254, 552)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Nucleotide metabolism_marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 215, 254, 552)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\Purine.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 229, 238, 544)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\test.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 13, 3, 21)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\xtra_modified_Biosynthesis of amino acids marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 147, 98, 288)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\hsa_filtering_dot\xtra_modified_Nucleotide metabolism_marked.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 215, 254, 552)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Biosynthesis of amino acids.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 151, 103, 297)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Biosynthesis of cofactors.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 330, 127, 565)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Carbon metabolism.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 182, 136, 356)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Nucleotide metabolism.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 215, 254, 552)
+
+File: C:\Users\marsh\Documents\Python Bachelor\QUBO_Project_BA\graphStuff\largeDots\mmu_filtering_dot\Purine.dot
+Enzymes with predecessors, Nr. of Nodes, aux Vars from me, from them: (0, 235, 241, 555)
+
