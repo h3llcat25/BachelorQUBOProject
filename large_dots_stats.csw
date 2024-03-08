@@ -1,0 +1,17 @@
+File Name,Nr. of Nodes,Nr. of total Bin Vars (Qutie),Nr. of total Bin Vars (new Method),Aux. Variable (Qutie),Aux. Variables (new Method),% difference of total Bin Vars,% difference Nr. of aux. Variables
+eco_filterin_dot\Biosynthesis of amino acids.dot,305,875,477,570,172,-45.49,-69.82
+eco_filterin_dot\Biosynthesis of cofactors.dot,451,1240,634,789,183,-48.87,-76.81
+eco_filterin_dot\Carbon metabolism.dot,194,602,370,408,176,-38.54,-56.86
+eco_filterin_dot\Nucleotide metabolism.dot,210,752,448,542,238,-40.43,-56.09
+eco_filterin_dot\Purine.dot,224,748,438,524,214,-41.44,-59.16
+hsa_filtering_dot\Biosynthesis of amino acids.dot,146,434,244,288,98,-43.78,-65.97
+hsa_filtering_dot\Biosynthesis of cofactors.dot,326,886,452,560,126,-48.98,-77.5
+hsa_filtering_dot\Carbon metabolism.dot,181,537,317,356,136,-40.97,-61.8
+hsa_filtering_dot\Nucleotide metabolism.dot,214,766,468,552,254,-38.9,-53.99
+hsa_filtering_dot\Purine.dot,228,772,466,544,238,-39.64,-56.25
+hsa_filtering_dot\test.dot,13,34,16,21,3,-52.94,-85.71
+mmu_filtering_dot\Biosynthesis of amino acids.dot,150,447,253,297,103,-43.4,-65.32
+mmu_filtering_dot\Biosynthesis of cofactors.dot,329,894,456,565,127,-48.99,-77.52
+mmu_filtering_dot\Carbon metabolism.dot,181,537,317,356,136,-40.97,-61.8
+mmu_filtering_dot\Nucleotide metabolism.dot,214,766,468,552,254,-38.9,-53.99
+mmu_filtering_dot\Purine.dot,234,789,475,555,241,-39.8,-56.58
