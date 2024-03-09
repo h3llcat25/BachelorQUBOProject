@@ -75,7 +75,7 @@ def node_to_solutionsValue_assignment_for_result(bin_var_dict, solution_dict):
     return node_to_sol
 
 
-def modify_dot_graph(graph, solution_dictionary, dot_file):
+def modify_dot_graph(graph, solution_dictionary, dot_file, target_nodes):
     # Load the .dot graph file
     rimColorAttribute = "color"
     fillColorAttribute = "fillcolor"
@@ -97,9 +97,14 @@ def modify_dot_graph(graph, solution_dictionary, dot_file):
                     node = graph.get_node(f"\"{key}\"")
                 node = node[0]
                 if len(node.get_attributes()) == 1 and 'type' in node.get_attributes():
-                    node.set(rimColorAttribute, rimColor)
-                    node.set(fillColorAttribute, fillColor)
-                    compoundDamage += 1
+                    if target_nodes.contains(key) or target_nodes.contains(f"\"{key}\""):  # Deckt den Fall ab, dass
+                        # die Nodes nicht im Dot Graph File markiert wurden, sondern randomly oder von der disease
+                        # Liste des Qutie Papers
+                        node.set(fillColorAttribute, targetFillColor)
+                    else:
+                        node.set(rimColorAttribute, rimColor)
+                        node.set(fillColorAttribute, fillColor)
+                        compoundDamage += 1
                 else:
                     node.set(fillColorAttribute, targetFillColor)
                 node.set(styleAttribute, filledStyle)
@@ -107,8 +112,13 @@ def modify_dot_graph(graph, solution_dictionary, dot_file):
                 node = graph.get_node(f'\"{key}\"')[0]
                 enzymeDamage += 1
                 if len(node.get_attributes()) == 1 and 'type' in node.get_attributes():
-                    node.set(rimColorAttribute, rimColor)
-                    node.set(fillColorAttribute, fillColor)
+                    if target_nodes.contains(key) or target_nodes.contains(f"\"{key}\""):  # Deckt den Fall ab, dass
+                        # die Nodes nicht im Dot Graph File markiert wurden, sondern randomly oder von der disease
+                        # Liste des Qutie Papers
+                        node.set(fillColorAttribute, targetFillColor)
+                    else:    
+                        node.set(rimColorAttribute, rimColor)
+                        node.set(fillColorAttribute, fillColor)
                 else:
                     node.set(fillColorAttribute, targetFillColor)
                 node.set(styleAttribute, filledStyle)
@@ -124,6 +134,8 @@ def modify_dot_graph(graph, solution_dictionary, dot_file):
 
     # Write the modified graph back to the new .dot file
     graph.write(new_filepath)
+
+
 
 
 def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): # (bin_vars_dict, modified_opt_term,
@@ -177,7 +189,7 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
     for var_name, var in variables.items():
         if not reverse_mapping[var_name].startswith("extra Var"):
             solution[reverse_mapping[var_name]] = var.X
-    return solution
+    return solution, objective
 
 
 # def param_search_and_auto_solver_auto_penalty(file_path):
@@ -218,7 +230,7 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes(file_path):
     modified_opt_term = just_simplifying_objective_function(optimization_term)
     modified_damage_opt_term = sympy.sympify(output_damage_only)
 
-    solution_dict = solve_qubo_with_gurobi(bin_vars_dict, modified_opt_term, modified_damage_opt_term)
+    solution_dict, objective_dict = solve_qubo_with_gurobi(bin_vars_dict, modified_opt_term, modified_damage_opt_term)
     # nodeNames_to_binaryMap = node_to_binvalue_assignment_for_result(bin_vars_dict, result.solution)
 
     # Print the solution
@@ -229,8 +241,8 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes(file_path):
 
 
 # TODO: Aktuell.
-def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_just_matrix(file_path):
-    bin_vars_dict, optimization_term, output_damage_only = generating_qubo_term_from_graph_two_part(file_path)
+def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(file_path):
+    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = generating_qubo_term_from_graph_two_part(file_path)
     modified_opt_term = just_simplifying_objective_function(optimization_term)
     modified_damage_opt_term = sympy.sympify(output_damage_only)
 
@@ -247,9 +259,8 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_just_matrix
             if cmplt_matrix[i][j] != 0:  # Only consider non-zero entries
                 qubo_dict[(i, j)] = cmplt_matrix[i][j]
 
-    return qubo_dict, list(bin_vars_dict.values())
+    solution_dict, objective_dict = solve_qubo_with_gurobi(bin_vars_dict, modified_opt_term, modified_damage_opt_term)
 
-    solution_dict = solve_qubo_with_gurobi(bin_vars_dict, modified_opt_term, modified_damage_opt_term)
 
     # nodeNames_to_binaryMap = node_to_binvalue_assignment_for_result(bin_vars_dict, result.solution)
 
@@ -257,11 +268,13 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_just_matrix
     # print(nodeNames_to_binaryMap)
     # print(result.solution)
     # print(result.objective_value)
-    modify_dot_graph(file_path, solution_dict)
+    modify_dot_graph(file_path, solution_dict, graph, marked_nodes)
+    print(objective_dict)
+    print(qubo_dict)
 
 
 def param_search_and_auto_solver_auto_penalty_two_parted(file_path):
-    bin_vars_dict, optimization_term, output_damage_only = generating_qubo_term_from_graph_two_part(file_path)
+    bin_vars_dict, optimization_term, output_damage_only, graph = generating_qubo_term_from_graph_two_part(file_path)
     modified_opt_term = just_simplifying_objective_function(optimization_term)
     modified_damage_opt_term = just_simplifying_objective_function(output_damage_only)
 
@@ -313,11 +326,11 @@ def main():
     # param_search_and_auto_solver_auto_penalty(
     # param_search_and_auto_solver_auto_penalty_two_parted(
     # param_search_and_auto_solver_auto_penalty_gurobipy_model(
-    param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes(
+    param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
         # "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
         # "\\Glycerolipid_marked.dot")
-        "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
-        "\\Citrate_cycle_marked.dot")
+        "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests\\eco_filtering_dot"
+        "\\Polyketide.dot")
     # "\\Biosynthesis of amino acids marked.dot")
 
 

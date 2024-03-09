@@ -1,35 +1,37 @@
-import random
-from graphStuff import randomGraphGenerator
+import matplotlib.pyplot as plt
 
-# Define a list of values with associated probabilities
-values = [1, 2, 3, 4]
-probabilities = [0.2, 0.3, 0.4, 0.1]
+# Example 1: Basic bar chart to show the use of 'x'
+plt.figure(figsize=(14, 4))
+plt.subplot(1, 4, 1)
+x = [1, 2, 3, 4]  # x coordinates of the bars
+height = [10, 15, 7, 10]
+aigw = [3, 9,4,7]
+plt.bar(x, height, color='skyblue')
+plt.title("Basic Bar Chart\n(x coordinates)")
 
-# Generate a random value based on the probabilities
-random_value = random.choices(values, probabilities)[0]
-random_vale = random.choice(values)
+# Example 2: Demonstration of 'align' parameter
+plt.subplot(1, 4, 2)
+plt.bar(x, height, width=0.5, align='center', color='lightgreen')
+plt.title("Align='center'")
 
+plt.bar([p + 0.5 for p in x], height, width=0.5, align='edge', color='orange', alpha=0.7)
+plt.title("Align='center' & 'edge'")
 
-def remove_numbers_from_list(input_list, numbers_to_remove):
-    # Use list comprehension to filter out numbers not in the set
-    result_list = [x for x in input_list if x not in numbers_to_remove]
-    return result_list
+plt.subplot(1, 4, 3)
 
+plt.bar([p - 0.2 for p in x], [p - 2 for p in height], width=0.4, align='center', color='red',edgecolor="black")
 
-# Example usage:
-my_list = [1, 2, 3, 4, 5]
+plt.bar([p + 0.2 for p in x], [p + 1 for p in height], width=0.4, align='center', color='orange',edgecolor="black")
 
-fyl = my_list.remove(3)
+plt.bar([p - 0.2 for p in x], aigw, width=0.4, align='center', color='red', edgecolor="black")
+# alpha=0.2
+plt.bar([p + 0.2 for p in x], aigw, width=0.4, align='center', color='orange', edgecolor="black")
+plt.title("Align='center'")
 
-myl = my_list[:]
+# Example 3: Demonstration of 'tick_label'
+plt.subplot(1, 4, 4)
+tick_labels = ['A', 'B', 'C', 'D']  # Labels for each bar
+plt.bar(x, height, tick_label=tick_labels, color='violet')
+plt.title("Tick Labels")
 
-numbers_set = {2, 4}
-# filtered_list = remove_numbers_from_list(my_list, numbers_set)
-
-myl.append(6)
-
-all_reacts_list = [randomGraphGenerator.React(i) for i in range(10)]
-
-dicto = {1: "stringo", "extra": 2.2, "seven": "heyjaw"}
-
-print(dicto)
+plt.show()

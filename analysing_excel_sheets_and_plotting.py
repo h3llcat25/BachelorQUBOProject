@@ -21,7 +21,8 @@ plt.figure(figsize=(14, 8))
 # plt.plot(x_positions, df['Nr. of total Bin Vars (Qutie)'], color='red', marker='o', linestyle='-', linewidth=2, markersize=5, label='Nr. of total Bin Vars (Qutie)')
 plt.bar(x_positions, df['Nr. of total Bin Vars (Qutie)'], color='red',label='Nr. of total Bin Vars (Qutie)', width=0.4)
 plt.bar(x_positions, df['Nr. of total Bin Vars (new Method)'], color='green', label='Nr. of total Bin Vars (new Method)', width=0.4)
-plt.bar(x_positions, df['Nr. of Nodes'], color='skyblue', tick_label=df['File Name'] label='Nr. of Nodes', width=0.4)
+plt.bar(x_positions, df['Nr. of Nodes'], color='skyblue', tick_label=df['File Name'], label='Nr. of Nodes', width=0.4)
+
 
 # Adding some chart elements for clarity
 plt.title('Comparison of Base Values and Total Values by Qutie and the new Method')

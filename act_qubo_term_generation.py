@@ -1,16 +1,7 @@
 import math
 import pydotplus
-
-
-# Step 1: Read the .dot file and extract the graph.
-def read_dot_file_pydotplus(file_path):
-    # Load the .dot file
-    try:
-        graph = pydotplus.graph_from_dot_file(file_path)
-        return graph
-    except Exception as e:
-        print(f'Error reading the .dot file: {str(e)}')
-        return None
+import random
+import time
 
 
 # Helpfunction for getting predecessors of a specific Node in the .Dot file, Wichtig, gibt ne list of strings zurück
@@ -49,8 +40,21 @@ def successors(graph, target_node_name):
     return successors
 
 
+# Step 1: Read the .dot file and extract the graph.
+def read_dot_file_pydotplus(file_path):
+    # Load the .dot file
+    try:
+        graph = pydotplus.graph_from_dot_file(file_path)
+        return graph
+    except Exception as e:
+        print(f'Error reading the .dot file: {str(e)}')
+        return None
+
+
 # Step 2: Create binary variables for each node and save nodes depending on type and color
-def create_binary_variables_plus_enzymes(graph):
+# If k is an integer Value, choose k random C Nodes as Target nodes
+# If seed not
+def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
     binary_var_dict = {}
     marked_c_nodes = []
     c_nodes = []
@@ -93,10 +97,43 @@ def create_binary_variables_plus_enzymes(graph):
             binary_var_dict[node.get_name()] = f'x_{node_index}'
             node_index += 1
 
+        if marked_c_nodes:
+            return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes, None
+
+        if k:
+            if seed is None:
+                # Use the current time to generate a random seed
+                seed = int(time.time())
+
+            # Set the seed for the random number generator for reproducibility
+            random.seed(seed)
+
+            # Select k random items from the input list
+            marked_c_nodes = random.sample(c_nodes, k)
+
+            for element in marked_c_nodes:
+                c_nodes.remove(element)
+
+            # Return the selected items and the seed used
+            return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes, seed
+
+        # Check Auto Case, where if no target compound is given, it will automatically look, which on ist there from
+        # the QUTIE Paper Disease List
+        disease_comp_set = {"C00036", "C01165", "C00183", "C00148", "C00074", "C00082", "C05382", "C00169", "C00049",
+                             "C00236", "C03287", "C00327", "C01005",
+                             "C00199", "C01005" "C00141", "C00407", "C00233", "C00119"}
+
+        marked_c_nodes = list(set(c_nodes).intersection(disease_comp_set))
+        if not marked_c_nodes:
+            raise ValueError("The given file has no marked Nodes or no node with the name listed in the OG Paper Disease "
+                         "list")
+
+        return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes, seed
+
+
     except Exception as e:
         print(f'Error creating binary variables: {str(e)}')
         return None
-    return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes
 
 
 def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_nodes):
@@ -137,7 +174,8 @@ def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_node
             equation += f'{meta_rulebreak_penalty}*('
             for marked_node in marked_c_nodes:
                 equation += f'(1 - {binary_var_dict[marked_node]}) + '
-                # check for circular subgraphs (reaction nodes connected with 2 edges in both directions to the same compound.
+                # check for circular subgraphs (reaction nodes connected with 2 edges in both directions to the same
+                # compound.
                 predecessors_set = set(predecessors(graph, marked_node))
                 successors_set = set(successors(graph, marked_node))
                 if predecessors_set & successors_set:
@@ -179,7 +217,7 @@ def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_node
                 if len(list(predecessors(graph, r_node))) > 0:  # If the number of predecessors is bigger than zero.
                     currBinVar_r = binary_var_dict[r_node]  # currBinVar contains r_node
                     if len(list(predecessors(graph, r_node))) == 1:  # If r_node has just one predecessor
-                        equation += f'{binary_var_dict[list(graph.predecessors(r_node))[0]]} + {currBinVar_r}'
+                        equation += f'{binary_var_dict[list(predecessors(graph,r_node))[0]]} + {currBinVar_r}'
                         equation += f' - 2 * {binary_var_dict[list(predecessors(graph, r_node))[0]]} * {currBinVar_r} + '
                     else:  # If there are more Predecessors than 1:
                         equation += f'(1 - {currBinVar_r} - y_r{extra_var_index_r}'
@@ -273,12 +311,14 @@ def generating_qubo_term_from_graph_two_part(file_path):
     if not graph:
         print("The Graph is weirdly, None...")
         return None
-    dict_and_sorted_nodes = create_binary_variables_plus_enzymes(graph)
+    dict_and_sorted_nodes, seed = create_binary_variables_plus_enzymes(graph)
     if dict_and_sorted_nodes:
         # binary_vars, output_term = generate_equation_auto_penalty(graph, dict_and_sorted_nodes[0],
         binary_vars, output_term, output_damage_only = generate_equation_auto_penalty_and_enzyme_damage(graph,
                                                                                                         dict_and_sorted_nodes)
-        return binary_vars, output_term, output_damage_only, graph
+        return binary_vars, output_term, output_damage_only, graph, seed, dict_and_sorted_nodes[1]  # Added the
+        # information of the target nodes, to color the result node, if no node was marked from the start or the
+        # Target(s) was/were randomly chosen
 
 
 # Example usage
@@ -298,3 +338,7 @@ if __name__ == '__main__':
 # print(node.get('type'))
 # print(node.get_attributes())
 # print(node.get_color())
+
+# my_function("This is required", optional_arg1="This is optional 1")  # Providing the first optional argument
+# my_function("This is required", optional_arg2="This is optional 2")  # Providing the second optional argument
+# my_function("This is required", "This is optional 1", "This is optional 2")  # Providing both optional arguments
