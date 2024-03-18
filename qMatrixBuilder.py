@@ -197,6 +197,7 @@ def prnt_gnrtd_ltx_mtrx(variable_list, objective_fct):
     print(generate_ltx_matrix(mtrx_tuples, len(variable_list)))
 
 
+#  Method that generates a Q (numpy) Matrix out of the objective function and the binary variable dictionary.
 def generate_final_np_matrix(bin_var_dict, objective_fct):
     variable_list = list(bin_var_dict.values())
     mtrx_tuples = build_matrix_tuples(variable_list, objective_fct)
