@@ -24,7 +24,6 @@ def predecessors(graph, target_node_name):
 # Helpfunction for getting successors of a specific Node in the .Dot file
 def successors(graph, target_node_name):
     # Specify the node for which you want to find the successors
-    target_node_name
 
     # Initialize an empty list to hold the successors
     successors = []
@@ -98,7 +97,7 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
             node_index += 1
 
         if marked_c_nodes:
-            return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes, None
+            return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes
 
         if k:
             if seed is None:
@@ -111,24 +110,22 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
             # Select k random items from the input list
             marked_c_nodes = random.sample(c_nodes, k)
 
-            for element in marked_c_nodes:
-                c_nodes.remove(element)
-
             # Return the selected items and the seed used
             return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes, seed
 
         # Check Auto Case, where if no target compound is given, it will automatically look, which on ist there from
         # the QUTIE Paper Disease List
         disease_comp_set = {"C00036", "C01165", "C00183", "C00148", "C00074", "C00082", "C05382", "C00169", "C00049",
-                             "C00236", "C03287", "C00327", "C01005",
-                             "C00199", "C01005" "C00141", "C00407", "C00233", "C00119"}
+                            "C00236", "C03287", "C00327", "C01005",
+                            "C00199", "C01005" "C00141", "C00407", "C00233", "C00119"}
 
         marked_c_nodes = list(set(c_nodes).intersection(disease_comp_set))
         if not marked_c_nodes:
-            raise ValueError("The given file has no marked Nodes or no node with the name listed in the OG Paper Disease "
-                         "list")
+            raise ValueError(
+                "The given file has no marked Nodes or no node with the name listed in the OG Paper Disease "
+                "list")
 
-        return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes, seed
+        return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes
 
 
     except Exception as e:
@@ -155,7 +152,7 @@ def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_node
         meta_rulebreak_penalty = int(math.floor(len(binary_var_dict)))
         print(f'Meta Rulebreaker Penalty is: {meta_rulebreak_penalty}')
 
-        # Damage Term has penalty factor 1 (not explicitly written out)
+        # Damage Term has penalty factor 2 (not explicitly written out)
         damage_only_equation += '2 * ('
         for c_node in c_nodes:
             if c_node not in marked_c_nodes:
@@ -217,7 +214,7 @@ def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_node
                 if len(list(predecessors(graph, r_node))) > 0:  # If the number of predecessors is bigger than zero.
                     currBinVar_r = binary_var_dict[r_node]  # currBinVar contains r_node
                     if len(list(predecessors(graph, r_node))) == 1:  # If r_node has just one predecessor
-                        equation += f'{binary_var_dict[list(predecessors(graph,r_node))[0]]} + {currBinVar_r}'
+                        equation += f'{binary_var_dict[list(predecessors(graph, r_node))[0]]} + {currBinVar_r}'
                         equation += f' - 2 * {binary_var_dict[list(predecessors(graph, r_node))[0]]} * {currBinVar_r} + '
                     else:  # If there are more Predecessors than 1:
                         equation += f'(1 - {currBinVar_r} - y_r{extra_var_index_r}'
@@ -311,12 +308,16 @@ def generating_qubo_term_from_graph_two_part(file_path):
     if not graph:
         print("The Graph is weirdly, None...")
         return None
-    dict_and_sorted_nodes, seed = create_binary_variables_plus_enzymes(graph)
+    dict_and_sorted_nodes = create_binary_variables_plus_enzymes(graph, 3)  # TODO WICHTIG, ich habe hier  k=3
+    # gesetzt, weil der Polyketide Graph keine diseased Knoten hat!!
     if dict_and_sorted_nodes:
+        if len(dict_and_sorted_nodes) == 6:
+            seed = dict_and_sorted_nodes[5]
+            dict_and_sorted_nodes = dict_and_sorted_nodes[:5]
         # binary_vars, output_term = generate_equation_auto_penalty(graph, dict_and_sorted_nodes[0],
         binary_vars, output_term, output_damage_only = generate_equation_auto_penalty_and_enzyme_damage(graph,
                                                                                                         dict_and_sorted_nodes)
-        return binary_vars, output_term, output_damage_only, graph, seed, dict_and_sorted_nodes[1]  # Added the
+        return binary_vars, output_term, output_damage_only, graph, dict_and_sorted_nodes[1]  # Added the
         # information of the target nodes, to color the result node, if no node was marked from the start or the
         # Target(s) was/were randomly chosen
 
@@ -327,11 +328,12 @@ def generating_qubo_term_from_graph_two_part(file_path):
 # binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = create_binary_variables_plus_enzymes(graph)
 
 if __name__ == '__main__':
-    graph = read_dot_file_pydotplus("C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\graphoz\\c.dot")
+    graph = read_dot_file_pydotplus(
+        "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\graphoz\\c.dot")
     # print(graph.get_node("H"))
     nodii = "1.013.2"
     print(graph.get_node(f"\"{nodii}\""))
-    #print(generating_qubo_term_from_graph_two_part("/workspaces/graph-coloring/Citrate_cycle_marked.dot")[2])
+    # print(generating_qubo_term_from_graph_two_part("/workspaces/graph-coloring/Citrate_cycle_marked.dot")[2])
 
 # print(graph.get_node('"\r\n"'))
 # print(node.get_name())
