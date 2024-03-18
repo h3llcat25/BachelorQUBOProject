@@ -1,37 +1,28 @@
-import matplotlib.pyplot as plt
+import pydotplus
 
-# Example 1: Basic bar chart to show the use of 'x'
-plt.figure(figsize=(14, 4))
-plt.subplot(1, 4, 1)
-x = [1, 2, 3, 4]  # x coordinates of the bars
-height = [10, 15, 7, 10]
-aigw = [3, 9,4,7]
-plt.bar(x, height, color='skyblue')
-plt.title("Basic Bar Chart\n(x coordinates)")
 
-# Example 2: Demonstration of 'align' parameter
-plt.subplot(1, 4, 2)
-plt.bar(x, height, width=0.5, align='center', color='lightgreen')
-plt.title("Align='center'")
+def check_node_attribute(dot_file_path, node_name):
+    # Load the .dot graph
+    graph = pydotplus.graph_from_dot_file(dot_file_path)
 
-plt.bar([p + 0.5 for p in x], height, width=0.5, align='edge', color='orange', alpha=0.7)
-plt.title("Align='center' & 'edge'")
+    # Iterate over the nodes in the graph
+    for node in graph.get_nodes():
+        # Node names are quoted strings in pydotplus, so we strip the quotes
+        if node.get_name().strip('"') == node_name:
+            # Check if the node has the attribute 'type' with value 'E'
+            if node.get("type") == "E":
+                print(f"The node '{node_name}' has the type 'E'.")
+                return True
+            else:
+                print(f"The node '{node_name}' does not have the type 'E'.")
+                return False
 
-plt.subplot(1, 4, 3)
+    # If the node was not found in the graph
+    print(f"The node '{node_name}' was not found in the graph.")
+    return False
 
-plt.bar([p - 0.2 for p in x], [p - 2 for p in height], width=0.4, align='center', color='red',edgecolor="black")
+# Example usage
+dot_file_path = 'C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\graphoz\\a.dot'  # Path to your .dot file
+node_name = 'YourNodeName'  # The name of the node you want to check
 
-plt.bar([p + 0.2 for p in x], [p + 1 for p in height], width=0.4, align='center', color='orange',edgecolor="black")
-
-plt.bar([p - 0.2 for p in x], aigw, width=0.4, align='center', color='red', edgecolor="black")
-# alpha=0.2
-plt.bar([p + 0.2 for p in x], aigw, width=0.4, align='center', color='orange', edgecolor="black")
-plt.title("Align='center'")
-
-# Example 3: Demonstration of 'tick_label'
-plt.subplot(1, 4, 4)
-tick_labels = ['A', 'B', 'C', 'D']  # Labels for each bar
-plt.bar(x, height, tick_label=tick_labels, color='violet')
-plt.title("Tick Labels")
-
-plt.show()
+print(check_node_attribute(dot_file_path, "5.1.3.13"))
