@@ -1,0 +1,10 @@
+digraph G {
+    "5.1.3.13" [type=E]
+    B [type=C]
+    C [type=R]
+    D [color=red, type=C]
+    
+    "5.1.3.13" -> C
+    B -> C
+    C -> D
+}

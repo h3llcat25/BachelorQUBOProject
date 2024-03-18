@@ -1,0 +1,15 @@
+digraph G {
+"5.1.3.13" [color=purple, fillcolor=blue, style=filled, type=E];
+C [type=C];
+R [color=purple, fillcolor=blue, style=filled, type=R];
+"5.1" [color=purple, fillcolor=blue, style=filled, type=E];
+Bb [type=C];
+Rr [color=purple, fillcolor=blue, style=filled, type=R];
+D [color=red, fillcolor=red, style=filled, type=C];
+"5.1.3.13" -> R;
+C -> R;
+R -> D;
+"5.1" -> Rr;
+Bb -> Rr;
+Rr -> D;
+}

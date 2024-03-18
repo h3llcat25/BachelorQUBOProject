@@ -1,10 +1,17 @@
 digraph G {
-    A [type=E]
-    B [type=C]
-    C [type=R]
-    D [color=red, type=C]
+    E1 [type=E]
+    C1 [type=C]
+    R1 [type=R]
+    E2 [type=E]
+    C2 [type=C]
+    R2 [type=R]
+    C3 [color=red, type=C]
     
-    A -> C
-    B -> C
-    C -> D
+    E1 -> R1
+    C1 -> R1
+    R1 -> C3
+    E2 -> R2
+    C2 -> R2
+    R2 -> C3
 }
+ef
