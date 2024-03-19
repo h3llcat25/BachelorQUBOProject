@@ -7,7 +7,7 @@ R02328 [type=R];
 R06513 [type=R];
 R02777 [type=R];
 R06514 [type=R];
-C11907 [type=C, fillcolor = red];
+C11907 [type=C, fillcolor = red, style = filled];
 C00842 [type=C];
 C03319 [type=C];
 C00688 [type=C];
