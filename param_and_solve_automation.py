@@ -2,7 +2,9 @@ import os
 import sympy
 from collections import defaultdict
 from gurobipy import Model, GRB, QuadExpr
+from sympy import symbols
 
+from creating_qubo_dict import *
 from qMatrixBuilder import *
 from act_qubo_term_generation import *
 
@@ -10,12 +12,13 @@ from act_qubo_term_generation import *
 # Simplifying the Input Equation instead of putting different penalty values. This function can be called,
 # instead of the replace_variables when the auto_meta_penalties (or smth) function has been chosen for the equation
 # generation
-def just_simplifying_objective_function(input_string):
+def just_simplifying_objective_function(input_string, locals):
     print(input_string)
-    expr = sympy.sympify(input_string)
+    expr = sympy.sympify(input_string, locals=locals)
     expr = sympy.simplify(expr)
     expr = sympy.expand(expr)
 
+    print(expr)
     return expr
 
 
@@ -43,11 +46,11 @@ def node_to_binvalue_assignment_for_result(bin_var_dict, solution_array):
 def node_to_solutionsValue_assignment_for_result(bin_var_dict, solution_dict):
     node_to_sol = {}
 
-    for key, value in bin_var_dict.items():
+    for key, value in bin_var_dict.items(): # key is node-name and value is x_i values
         if key.startswith('extra Var for'):
-            break
+            continue
         solution_val = solution_dict.get(value)
-        node_to_sol[key] = solution_val
+        node_to_sol[key] = solution_val  # node-name to solution value
 
     return node_to_sol
 
@@ -101,8 +104,6 @@ def modify_dot_graph(graph, solution_dictionary, dot_file, target_nodes):
 
     # Write the modified graph back to the new .dot file
     graph.write(new_filepath)
-
-
 
 
 def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): # (bin_vars_dict, modified_opt_term,
@@ -162,8 +163,10 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
 # TODO: Aktuell.
 def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(file_path):
     bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = generating_qubo_term_from_graph_two_part(file_path)
-    modified_opt_term = just_simplifying_objective_function(optimization_term)
-    modified_damage_opt_term = sympy.sympify(output_damage_only)
+    variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
+
+    modified_opt_term = just_simplifying_objective_function(optimization_term, variables)
+    modified_damage_opt_term = sympy.sympify(output_damage_only, locals=variables)
 
     print(modified_damage_opt_term)
     print(bin_vars_dict)
@@ -197,12 +200,53 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
     # print(solution_dict)
 
 
+def old_get_qubo_matrix_for_dwave_qa(file_path):
+    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = generating_qubo_term_from_graph_two_part(file_path)
+    variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
+
+    modified_opt_term = just_simplifying_objective_function(optimization_term, variables)
+    modified_damage_opt_term = sympy.sympify(output_damage_only, locals=variables)
+
+    print(modified_damage_opt_term)
+    print(bin_vars_dict)
+
+    qmatrix = generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
+    qmatrix_damage = generate_final_np_matrix(bin_vars_dict, str(modified_damage_opt_term))
+
+    cmplt_matrix = add_damage_matrix_to_q_matrix(qmatrix, qmatrix_damage)
+
+    qubo_dict = defaultdict(int)
+    n = cmplt_matrix.shape[0]  # Assuming a square matrix
+    bin_vars_list = list(bin_vars_dict.values())
+
+    for i in range(n):
+        for j in range(i, n):  # Only need to iterate over the upper triangle due to symmetry
+            if cmplt_matrix[i][j] != 0:  # Only consider non-zero entries
+                qubo_dict[(bin_vars_list[i], bin_vars_list[j])] = cmplt_matrix[i][j]
+
+    return qubo_dict, graph, bin_vars_dict, marked_nodes
+
+    # print(solution_dict)
+
+
+def get_qubo_dict_for_dwave_qa(file_path):
+    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = generating_qubo_term_from_graph_two_part(file_path)
+    variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
+
+    modified_opt_term = just_simplifying_objective_function(optimization_term, variables)
+    modified_damage_opt_term = sympy.sympify(output_damage_only, locals=variables)
+
+    q_dict = creating_qubo_dict_sympy(modified_opt_term, modified_damage_opt_term)
+
+    return q_dict, graph, bin_vars_dict, marked_nodes
+
+
 # MAIN
 def main():
     # param_search_and_auto_solver_auto_penalty(
     # param_search_and_auto_solver_auto_penalty_two_parted(
-    # param_search_and_auto_solver_auto_penalty_gurobipy_model(
-    param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
+    tests_for_getting_qubo_matrix(
+    # param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
         # "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
         # "\\Glycerolipid_marked.dot")
         "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
