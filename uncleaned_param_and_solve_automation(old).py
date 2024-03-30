@@ -265,7 +265,8 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
 
 
 def param_search_and_auto_solver_auto_penalty_two_parted(file_path):
-    bin_vars_dict, optimization_term, output_damage_only, graph = generating_qubo_term_from_graph_two_part(file_path)
+    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
+    bin_vars_dict, optimization_term, output_damage_only, graph = tie_qubo_struct.get_dict_objectives_graph()
     modified_opt_term = just_simplifying_objective_function(optimization_term)
     modified_damage_opt_term = just_simplifying_objective_function(output_damage_only)
 
