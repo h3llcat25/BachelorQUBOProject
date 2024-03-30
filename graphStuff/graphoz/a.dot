@@ -14,4 +14,3 @@ digraph G {
     C2 -> R2
     R2 -> C3
 }
-ef
