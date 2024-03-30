@@ -62,6 +62,7 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
     node_index = 1
 
     graph.del_node("\"\\r\\n\"")  # Muss gelöscht werden, da als Artefakt immer zusätzlich als Knoten generiert wird
+    graph.del_node("\"\\n\"")
 
     try:  # Check ob die Datei auch nur mit Knoten eines bestimmten Formats ausgestattet ist.
         for node in graph.get_nodes():
