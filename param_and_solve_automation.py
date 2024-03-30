@@ -160,7 +160,6 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
     return solution
 
 
-# TODO: Aktuell.
 def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(file_path):
     bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = generating_qubo_term_from_graph_two_part(file_path)
     variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
@@ -171,19 +170,19 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
     print(modified_damage_opt_term)
     print(bin_vars_dict)
 
-    qmatrix = generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
-    qmatrix_damage = generate_final_np_matrix(bin_vars_dict, str(modified_damage_opt_term))
+    # qmatrix = generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
+    # qmatrix_damage = generate_final_np_matrix(bin_vars_dict, str(modified_damage_opt_term))
 
-    cmplt_matrix = add_damage_matrix_to_q_matrix(qmatrix, qmatrix_damage)
+    # cmplt_matrix = add_damage_matrix_to_q_matrix(qmatrix, qmatrix_damage)
 
-    qubo_dict = defaultdict(int)
-    n = cmplt_matrix.shape[0]  # Assuming a square matrix
-    bin_vars_list = list(bin_vars_dict.values())
+    # qubo_dict = defaultdict(int)
+    # n = cmplt_matrix.shape[0]  # Assuming a square matrix
+    # bin_vars_list = list(bin_vars_dict.values())
 
-    for i in range(n):
-        for j in range(i, n):  # Only need to iterate over the upper triangle due to symmetry
-            if cmplt_matrix[i][j] != 0:  # Only consider non-zero entries
-                qubo_dict[(bin_vars_list[i], bin_vars_list[j])] = cmplt_matrix[i][j]
+    # for i in range(n):
+    #     for j in range(i, n):  # Only need to iterate over the upper triangle due to symmetry
+    #        if cmplt_matrix[i][j] != 0:  # Only consider non-zero entries
+    #            qubo_dict[(bin_vars_list[i], bin_vars_list[j])] = cmplt_matrix[i][j]
 
     solution_dict = solve_qubo_with_gurobi(bin_vars_dict, modified_opt_term, modified_damage_opt_term)
 
@@ -195,7 +194,7 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
     # print(result.solution)
     # print(result.objective_value)
     modify_dot_graph(graph, solution_dict, file_path, marked_nodes)  # graph, solution_dictionary, dot_file, target_nodes
-    return qubo_dict
+    # return qubo_dict
 
     # print(solution_dict)
 
@@ -245,12 +244,12 @@ def get_qubo_dict_for_dwave_qa(file_path):
 def main():
     # param_search_and_auto_solver_auto_penalty(
     # param_search_and_auto_solver_auto_penalty_two_parted(
-    tests_for_getting_qubo_matrix(
-    # param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
+    # old_get_qubo_matrix_for_dwave_qa(
+    param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
         # "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
         # "\\Glycerolipid_marked.dot")
         "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
-        "\\eco_filtering_dot\\Polyketide.dot")
+        "\\eco_filtering_dot\\Glycine_serine_threonine.dot")
         # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\graphoz\\a.dot")
         #  "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\graphoz\\a.dot")
     # "\\Biosynthesis of amino acids marked.dot")
