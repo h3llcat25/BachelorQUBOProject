@@ -3,6 +3,8 @@ import pydotplus
 import random
 import time
 
+from tie_graph_problem import TieGraphProblem
+from tie_qubo_struct import TieQuboStruct
 
 # Helpfunction for getting predecessors of a specific Node in the .Dot file, Wichtig, gibt ne list of strings zurück
 def predecessors(graph, target_node_name):
@@ -98,7 +100,8 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
             node_index += 1
 
         if marked_c_nodes:
-            return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes
+            tie_graph_problem = TieGraphProblem(binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes)
+            return tie_graph_problem
 
         if k:
             if seed is None:
@@ -112,7 +115,8 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
             marked_c_nodes = random.sample(c_nodes, k)
 
             # Return the selected items and the seed used
-            return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes, seed
+            tie_graph_problem = TieGraphProblem(binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes, seed)
+            return tie_graph_problem
 
         # Check Auto Case, where if no target compound is given, it will automatically look, which on ist there from
         # the QUTIE Paper Disease List
@@ -126,7 +130,8 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
                 "The given file has no marked Nodes or no node with the name listed in the OG Paper Disease "
                 "list")
 
-        return binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes
+        tie_graph_problem = TieGraphProblem(binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes)
+        return tie_graph_problem
 
 
     except Exception as e:
@@ -136,7 +141,7 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
 
 def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_nodes):
     try:
-        binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = dict_and_sorted_nodes
+        binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = dict_and_sorted_nodes.get_dict_and_lists()
         # start from where to count for the extra variables for reactions r and compounds c.
         extra_var_index_r = 1
         extra_var_index_c = 1
@@ -312,11 +317,11 @@ def generating_qubo_term_from_graph_two_part(file_path):
     dict_and_sorted_nodes = create_binary_variables_plus_enzymes(graph, 3)  # TODO WICHTIG, ich habe hier  k=3
     # gesetzt, weil der Polyketide Graph keine diseased Knoten hat!!
     if dict_and_sorted_nodes:
-        if len(dict_and_sorted_nodes) == 6:
-            seed = dict_and_sorted_nodes[5]
-            dict_and_sorted_nodes = dict_and_sorted_nodes[:5]
+        if dict_and_sorted_nodes.has_seed():
+            seed = dict_and_sorted_nodes.get_seed()
         # binary_vars, output_term = generate_equation_auto_penalty(graph, dict_and_sorted_nodes[0],
         binary_vars, output_term, output_damage_only = generate_equation_auto_penalty_and_enzyme_damage(graph,
+
                                                                                                         dict_and_sorted_nodes)
         return binary_vars, output_term, output_damage_only, graph, dict_and_sorted_nodes[1]  # Added the
         # information of the target nodes, to color the result node, if no node was marked from the start or the

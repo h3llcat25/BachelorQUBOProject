@@ -7,6 +7,7 @@ from sympy import symbols
 from creating_qubo_dict import *
 from qMatrixBuilder import *
 from act_qubo_term_generation import *
+from tie_graph_problem import *
 
 
 # Simplifying the Input Equation instead of putting different penalty values. This function can be called,
