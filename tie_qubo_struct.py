@@ -12,5 +12,8 @@ class TieQuboStruct:
     def get_dict_objectives_graph_targets(self):
         return self.bin_var_dict, self.objective_propagation, self.objective_damage, self.graph, self.target_nodes
 
+    def get_dict_objectives_graph(self):
+        return self.bin_var_dict, self.objective_propagation, self.objective_damage, self.graph
+
     def has_seed(self):
         return self.seed is not None

@@ -7,11 +7,16 @@ class TieGraphProblem:
         self.r_nodes = list4 if list4 is not None else []
         self.seed = seed
 
+        self.abstrct_dict = None
+
     def set_bin_var_dict(self, bin_var_dict):
         self.bin_var_dict = bin_var_dict
 
     def set_marked_c_nodes(self, marked_c_nodes):
         self.marked_c_nodes = marked_c_nodes
+
+    def get_marked_c_nodes(self):
+        return self.marked_c_nodes
 
     def set_c_nodes(self, c_nodes):
         self.c_nodes = c_nodes
@@ -33,3 +38,9 @@ class TieGraphProblem:
 
     def has_seed(self):
         return self.seed is not None
+
+    def set_abstrct_dict(self, abstrct_dict):
+        self.abstrct_dict = abstrct_dict
+
+    def get_abstrct_dict(self):
+        return self.abstrct_dict

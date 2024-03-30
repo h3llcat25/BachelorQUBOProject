@@ -162,7 +162,8 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
 
 
 def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(file_path):
-    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = generating_qubo_term_from_graph_two_part(file_path)
+    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
+    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = tie_qubo_struct.get_dict_objectives_graph_targets()
     variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
 
     modified_opt_term = just_simplifying_objective_function(optimization_term, variables)
