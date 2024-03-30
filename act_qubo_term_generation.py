@@ -63,6 +63,12 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
     e_nodes = []
     node_index = 1
 
+    abstrct_var_dict = {}
+    c_var_count = 1
+    r_var_count = 1
+    e_var_count = 1
+
+
     graph.del_node("\"\\r\\n\"")  # Muss gelöscht werden, da als Artefakt immer zusätzlich als Knoten generiert wird
     graph.del_node("\"\\n\"")
 
@@ -91,16 +97,25 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
 
             if node_type == "E":
                 e_nodes.append(node.get_name())
+                abstrct_var_dict[node.get_name()] = f'E{e_var_count}'
+                e_var_count += 1
             if node_type == "C":
                 c_nodes.append(node.get_name())
+                abstrct_var_dict[node.get_name()] = f'C{c_var_count}'
+                c_var_count += 1
             if node_type == "R":
                 r_nodes.append(node.get_name())
+                abstrct_var_dict[node.get_name()] = f'R{r_var_count}'
+                r_var_count += 1
 
             binary_var_dict[node.get_name()] = f'x_{node_index}'
             node_index += 1
 
+        tie_graph_problem = TieGraphProblem(binary_var_dict, list2=c_nodes, list3=e_nodes, list4=r_nodes)
+        tie_graph_problem.set_abstrct_dict(abstrct_var_dict)
+
         if marked_c_nodes:
-            tie_graph_problem = TieGraphProblem(binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes)
+            tie_graph_problem.set_marked_c_nodes(marked_c_nodes)
             return tie_graph_problem
 
         if k:
@@ -115,7 +130,8 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
             marked_c_nodes = random.sample(c_nodes, k)
 
             # Return the selected items and the seed used
-            tie_graph_problem = TieGraphProblem(binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes, seed)
+            tie_graph_problem.set_marked_c_nodes(marked_c_nodes)
+            tie_graph_problem.set_seed(seed)
             return tie_graph_problem
 
         # Check Auto Case, where if no target compound is given, it will automatically look, which on ist there from
@@ -130,7 +146,7 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
                 "The given file has no marked Nodes or no node with the name listed in the OG Paper Disease "
                 "list")
 
-        tie_graph_problem = TieGraphProblem(binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes)
+        tie_graph_problem.set_marked_c_nodes(marked_c_nodes)
         return tie_graph_problem
 
 
@@ -150,6 +166,11 @@ def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_node
         react_pena_term = ''
         compo_pena_term = ''
 
+        print(r_nodes)
+
+        abstrct_dict = dict_and_sorted_nodes.get_abstrct_dict()
+        abstrct_terms = ''
+
         double_edged_reactions = set()
         circular_marked_c_nodes = []
 
@@ -159,18 +180,25 @@ def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_node
         print(f'Meta Rulebreaker Penalty is: {meta_rulebreak_penalty}')
 
         # Damage Term has penalty factor 2 (not explicitly written out)
-        damage_only_equation += '2 * ('
+        damage_only_equation += '8 * ('
         for c_node in c_nodes:
             if c_node not in marked_c_nodes:
                 damage_only_equation += f'{binary_var_dict[c_node]} + '
 
         damage_only_equation = damage_only_equation.rstrip(' + ')
-        damage_only_equation += ") + "
+        damage_only_equation += ") + 3*("
 
-        # Damage Term has penalty factor 1 (not explicitly written out)
+        # Enzyme Damage Term has penalty factor 3 (not explicitly written out)
         for e_node in e_nodes:
             damage_only_equation += f'{binary_var_dict[e_node]} + '
         damage_only_equation = damage_only_equation.rstrip(' + ')
+        damage_only_equation += ") + 5*("
+
+        # Reaction Damage Term has penalty factor 1 (not explicitly written out)
+        for r_node in r_nodes:
+            damage_only_equation += f'{binary_var_dict[r_node]} + '
+        damage_only_equation = damage_only_equation.rstrip(' + ')
+        damage_only_equation += ")"
 
         # Case 2  Target Term, how many targeted compounds didn't get inhibited.
         if len(marked_c_nodes) > 0:
@@ -320,10 +348,10 @@ def generating_qubo_term_from_graph_two_part(file_path):
         if dict_and_sorted_nodes.has_seed():
             seed = dict_and_sorted_nodes.get_seed()
         # binary_vars, output_term = generate_equation_auto_penalty(graph, dict_and_sorted_nodes[0],
-        binary_vars, output_term, output_damage_only = generate_equation_auto_penalty_and_enzyme_damage(graph,
+        binary_vars, output_term, output_damage_only = generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_nodes)
 
-                                                                                                        dict_and_sorted_nodes)
-        return binary_vars, output_term, output_damage_only, graph, dict_and_sorted_nodes[1]  # Added the
+        tie_qubo_struct = TieQuboStruct(binary_vars, output_term, output_damage_only, graph, dict_and_sorted_nodes.get_marked_c_nodes())
+        return tie_qubo_struct  # Added the
         # information of the target nodes, to color the result node, if no node was marked from the start or the
         # Target(s) was/were randomly chosen
 
