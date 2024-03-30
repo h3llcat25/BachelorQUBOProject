@@ -35,6 +35,7 @@ def creating_qubo_dict_sympy(modified_opt_term, modified_damage_opt_term=None):
 
     for term, coeff in coeff_dict.items():
         # Normalize squared terms
+        term = str(term)
         normalized_term = term.replace('**2', '')
 
         # Split the normalized term by '*' to separate variables
@@ -46,12 +47,15 @@ def creating_qubo_dict_sympy(modified_opt_term, modified_damage_opt_term=None):
         elif len(variables) == 1 and variables[0] != '1':
             # Linear or squared term: add to QUBO, using the same variable name for both keys
             q_dict[(variables[0], variables[0])] += coeff
-        # Constant terms are typically not represented in a QUBO dictionary
+        elif variables[0] != '1':
+            print(f"There is something fishy here with {variables}")
 
     if modified_damage_opt_term:
         coeff_dict_damage = modified_damage_opt_term.as_coefficients_dict()
 
         for term, coeff in coeff_dict_damage.items():
+            term = str(term)
+
             normalized_term = term.replace('**2', '')
             variables = normalized_term.split('*')
 
@@ -59,6 +63,8 @@ def creating_qubo_dict_sympy(modified_opt_term, modified_damage_opt_term=None):
                 q_dict[(variables[0], variables[1])] += coeff
             elif len(variables) == 1 and variables[0] != '1':
                 q_dict[(variables[0], variables[0])] += coeff
+            elif variables[0] != '1':
+                print(f"There is something fishy here with {variables}")
 
     # Convert defaultdict back to a regular dict for the final output
     qubo_dict = dict(q_dict)
