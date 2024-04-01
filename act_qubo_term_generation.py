@@ -282,7 +282,8 @@ def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_node
         equation = equation.rstrip(' + ')
         equation += ")"
         # print(f'Generated equation: {equation}')
-        return binary_var_dict, equation, damage_only_equation
+        tie_qubo_struct = TieQuboStruct(binary_var_dict, equation, damage_only_equation, graph, dict_and_sorted_nodes.get_marked_c_nodes())
+        return tie_qubo_struct
 
     except Exception as e:
         print(f'Error generating equation: {str(e)}')
@@ -348,13 +349,12 @@ def generating_qubo_term_from_graph_two_part(file_path):
         if dict_and_sorted_nodes.has_seed():
             seed = dict_and_sorted_nodes.get_seed()
         # binary_vars, output_term = generate_equation_auto_penalty(graph, dict_and_sorted_nodes[0],
-        binary_vars, output_term, output_damage_only = generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_nodes)
-
-        tie_qubo_struct = TieQuboStruct(binary_vars, output_term, output_damage_only, graph, dict_and_sorted_nodes.get_marked_c_nodes())
+        tie_qubo_struct = generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_nodes)
         return tie_qubo_struct  # Added the
         # information of the target nodes, to color the result node, if no node was marked from the start or the
         # Target(s) was/were randomly chosen
-
+    else:
+        print("there is somehow not a dict_and_sorted_nodes")
 
 # Example usage
 # file_path = '/workspaces/graph-coloring/Citrate_cycle_marked.dot'
