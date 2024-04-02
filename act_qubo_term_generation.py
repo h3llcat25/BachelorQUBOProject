@@ -64,7 +64,6 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
     node_index = 1
 
     abstrct_var_dict = {}
-    c_var_count = 1
     r_var_count = 1
     e_var_count = 1
 
@@ -92,17 +91,15 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
                 if node_type != "C":
                     raise ValueError(f"The Node \"{node.get_name()}\" has color attribute but is not type C")
 
-            if color == "red" and node_type == "C":
-                marked_c_nodes.append(node.get_name())
-
+            if node_type == "C":
+                if color == "red":
+                    marked_c_nodes.append(node.get_name())
+                else:
+                    c_nodes.append(node.get_name())
             if node_type == "E":
                 e_nodes.append(node.get_name())
                 abstrct_var_dict[node.get_name()] = f'E{e_var_count}'
                 e_var_count += 1
-            if node_type == "C":
-                c_nodes.append(node.get_name())
-                abstrct_var_dict[node.get_name()] = f'C{c_var_count}'
-                c_var_count += 1
             if node_type == "R":
                 r_nodes.append(node.get_name())
                 abstrct_var_dict[node.get_name()] = f'R{r_var_count}'
@@ -111,14 +108,17 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
             binary_var_dict[node.get_name()] = f'x_{node_index}'
             node_index += 1
 
-        tie_graph_problem = TieGraphProblem(binary_var_dict, list2=c_nodes, list3=e_nodes, list4=r_nodes)
+        tie_graph_problem = TieGraphProblem(bin_var_dict=binary_var_dict, list3=e_nodes, list4=r_nodes)
         tie_graph_problem.set_abstrct_dict(abstrct_var_dict)
 
-        if marked_c_nodes:
+        if marked_c_nodes: # 1. Case: There are marked C nodes in the dot file, so we don't have to generate them
+            abstrct_var_dict.update({node: f'C{i + 1}' for i, node in enumerate(c_nodes)})
+            abstrct_var_dict.update({node: f'TC{i + 1}' for i, node in enumerate(marked_c_nodes)})
+            tie_graph_problem.set_c_nodes(c_nodes)
             tie_graph_problem.set_marked_c_nodes(marked_c_nodes)
             return tie_graph_problem
 
-        if k:
+        if k: # 2. Case to randomly take marked c_nodes
             if seed is None:
                 # Use the current time to generate a random seed
                 seed = int(time.time())
@@ -129,8 +129,20 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
             # Select k random items from the input list
             marked_c_nodes = random.sample(c_nodes, k)
 
+            # And take them out of the c_nodes list
+            c_nodes_set = set(c_nodes)
+            marked_c_nodes_set = set(marked_c_nodes)
+            # Use set difference to remove marked_c_nodes from c_nodes
+            c_nodes_set -= marked_c_nodes_set
+            c_nodes = list(c_nodes_set)
+
             # Return the selected items and the seed used
+            abstrct_var_dict.update({node: f'C{i + 1}' for i, node in enumerate(c_nodes)})
+            abstrct_var_dict.update({node: f'TC{i + 1}' for i, node in enumerate(marked_c_nodes)})
+
+            tie_graph_problem.set_abstrct_dict(abstrct_var_dict)
             tie_graph_problem.set_marked_c_nodes(marked_c_nodes)
+            tie_graph_problem.set_c_nodes(c_nodes)
             tie_graph_problem.set_seed(seed)
             return tie_graph_problem
 
@@ -146,7 +158,12 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
                 "The given file has no marked Nodes or no node with the name listed in the OG Paper Disease "
                 "list")
 
+        abstrct_var_dict.update({node: f'C{i + 1}' for i, node in enumerate(c_nodes)})
+        abstrct_var_dict.update({node: f'TC{i + 1}' for i, node in enumerate(marked_c_nodes)})
+
+        tie_graph_problem.set_abstrct_dict(abstrct_var_dict)
         tie_graph_problem.set_marked_c_nodes(marked_c_nodes)
+        tie_graph_problem.set_c_nodes(c_nodes)
         return tie_graph_problem
 
 
@@ -155,6 +172,7 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
         return None
 
 
+# not aktuell
 def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_nodes):
     try:
         binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = dict_and_sorted_nodes.get_dict_and_lists()
@@ -166,7 +184,6 @@ def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_node
         react_pena_term = ''
         compo_pena_term = ''
 
-        print(r_nodes)
 
         abstrct_dict = dict_and_sorted_nodes.get_abstrct_dict()
         abstrct_terms = ''
@@ -289,6 +306,193 @@ def generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_node
         print(f'Error generating equation: {str(e)}')
 
 
+def generate_equation_set_up_phase(graph, dict_and_sorted_nodes):
+    # Setting up all necessary variables, lists, indices, and equation/penalty terms
+    binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = dict_and_sorted_nodes.get_dict_and_lists()
+    abstract_var_dict = dict_and_sorted_nodes.get_abstrct_dict()
+    # start from where to count for the extra variables for reactions r and compounds c.
+    extra_var_index_r = 1
+    equation = ''
+    react_pena_term = ''
+    compo_pena_term = ''
+    # Start of the set-up for inevitable inhibitions:
+    # 1. Marked compound nodes and reactions
+    all_successors_set_up_reacts = set()
+    all_predecessors_set_up_reacts = set()
+
+    try:
+        # 1.1 Generate the terms for each marked_node x, that it has to get inhibited (1-x)
+        # And create the predecessor and successor sets for the next step
+        for marked_node in marked_c_nodes:
+            equation += f'(1 - {binary_var_dict[marked_node]}) + '
+            all_successors_set_up_reacts.update(set(successors(graph, marked_node)))
+            all_predecessors_set_up_reacts.update(set(predecessors(graph, marked_node)))
+
+        # 2. Generate the terms for each predecessor and successor node y, that it has to get inhibited (1-y)
+        all_set_up_reacts = all_predecessors_set_up_reacts | all_successors_set_up_reacts
+        for node in all_set_up_reacts:
+            equation += f'(1 - {binary_var_dict[node]}) + '
+
+        # 3. find the successor compound nodes, from the reactions the target compounds are reactants from
+        # and put them in a term to inhibit them
+        all_successors_set_up_compounds = set()
+        for r_node in all_successors_set_up_reacts:
+            current_successors_set = set(successors(graph, r_node))
+            all_successors_set_up_compounds.update(current_successors_set)
+
+            current_predecessors_set = set(predecessors(graph, r_node))
+            if current_predecessors_set.isdisjoint(current_successors_set): # Wenn der Reaktionsknoten nicht auch noch
+                # mit anderen Compounds über bidirektionale Kanten verbunden ist, dann nimm den Knoten aus der Menge der
+                # Reaktions knoten heraus:
+                r_nodes.remove(r_node)
+
+        # 3.1 Gehe durch alle Compounds die auf Reaktionen folgen und checke, ob all ihre reaktionen
+        # theoretisch inhibiert werden.
+        negligible_compounds = set(marked_c_nodes)
+        for successor_c_node in all_successors_set_up_compounds - set(marked_c_nodes):
+            if set(predecessors(graph, successor_c_node)).issubset(all_set_up_reacts):
+                equation += f'(1 - {binary_var_dict[successor_c_node]}) + '
+                negligible_compounds.add(successor_c_node)
+
+        c_nodes = list(set(c_nodes) - negligible_compounds)
+
+        # 4. Do reaction propagation for the predecessors of the Reaction nodes for the marked c nodes
+        for r_node in all_predecessors_set_up_reacts:
+            if r_node in r_nodes:
+                r_nodes.remove(r_node)
+
+            current_successors_set = set(successors(graph, r_node))
+            current_predecessors_set = set(predecessors(graph, r_node))
+            marked_c_nodes_set = set(marked_c_nodes)
+            if current_predecessors_set.isdisjoint(current_successors_set) and negligible_compounds & current_predecessors_set and negligible_compounds & current_successors_set:  # Wenn der Reaktionsknoten nicht auch noch
+                # mit anderen Compounds über bidirektionale Kanten verbunden ist
+                continue
+
+
+            valid_react_predecessors = list(set(predecessors(graph, r_node)) - negligible_compounds)
+
+            if len(valid_react_predecessors) == 1:  # If r_node has just one predecessor
+                equation += f'(1 - {binary_var_dict[valid_react_predecessors[0]]}) + '
+            elif len(valid_react_predecessors) == 2:  # der Term heißt: mind. ein element ist inhibiert
+                equation += f'(1 - {binary_var_dict[valid_react_predecessors[0]]}) * (1 - {binary_var_dict[valid_react_predecessors[1]]}) + '
+            else:  # If there are more Predecessors left than 1:
+                equation += f'(1 - {binary_var_dict[valid_react_predecessors[0]]} * y_r{extra_var_index_r}) + '
+                binary_var_dict[f'extra Var for r{extra_var_index_r}'] = f'y_r{extra_var_index_r}'
+                react_pena_term += reaction_reduction_penalty(valid_react_predecessors[1:], binary_var_dict,
+                                                              extra_var_index_r)
+                extra_var_index_r += 1
+
+        dict_and_sorted_nodes.set_r_nodes(r_nodes)
+        dict_and_sorted_nodes.set_c_nodes(c_nodes)
+        dict_and_sorted_nodes.set_equation(equation)
+        dict_and_sorted_nodes.set_react_pena_term(react_pena_term)
+        dict_and_sorted_nodes.set_extra_var_index_r(extra_var_index_r)
+
+        dict_and_sorted_nodes.set_abstrct_dict(abstract_var_dict)
+
+        return dict_and_sorted_nodes
+    except Exception as e:
+        print(f'Error generating set up: {str(e)}')
+
+# AKTUELL
+def generate_equation(graph, dict_and_sorted_nodes):
+    try:
+        # Set up where all clear to inhibit nodes get put up into the equation
+        dict_and_sorted_nodes = generate_equation_set_up_phase(graph, dict_and_sorted_nodes)
+
+        # Initiating all necessary variables, lists, indices, and equation/penalty terms for the other terms
+        binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = dict_and_sorted_nodes.get_dict_and_lists()
+
+        # start from where to count for the extra variables for reactions r and compounds c.
+        extra_var_index_r = dict_and_sorted_nodes.get_extra_var_index_r()
+        extra_var_index_c = 1
+        equation = dict_and_sorted_nodes.get_equation()
+        damage_only_equation = ''
+        react_pena_term = dict_and_sorted_nodes.get_react_pena_term()
+        compo_pena_term = ''
+
+        # Setting up Abstract Dictionary to better check in the results
+        abstrct_dict = dict_and_sorted_nodes.get_abstrct_dict()
+        abstrct_terms = dict_and_sorted_nodes.get_abstract_term()
+
+        # Automatic Penalty calculation, based on if all Reactions, Enzymes and marked Compounds of the metabolic
+        # network are inhibited
+        meta_rulebreak_penalty = int(math.floor(len(binary_var_dict)))
+        print(f'Meta Rulebreaker Penalty is: {meta_rulebreak_penalty}')
+
+        equation += f'{meta_rulebreak_penalty}*({equation}'
+
+        # 1. Reactions and Reduction Penalty:
+        if len(r_nodes) > 0:
+            for r_node in r_nodes:  # For all Reaction nodes
+                if len(list(predecessors(graph, r_node))) > 0:  # If the number of predecessors is bigger than zero.
+                    currBinVar_r = binary_var_dict[r_node]  # currBinVar contains r_node
+                    if len(list(predecessors(graph, r_node))) == 1:  # If r_node has just one predecessor
+                        equation += f'{binary_var_dict[list(predecessors(graph, r_node))[0]]} + {currBinVar_r}'
+                        equation += f' - 2 * {binary_var_dict[list(predecessors(graph, r_node))[0]]} * {currBinVar_r} + '
+                    else:  # If there are more Predecessors than 1:
+                        equation += f'(1 - {currBinVar_r} - y_r{extra_var_index_r}'
+                        equation += f' + 2 * {currBinVar_r} * y_r{extra_var_index_r}) + '
+                        binary_var_dict[f'extra Var for r{extra_var_index_r}'] = f'y_r{extra_var_index_r}'
+                        react_pena_term += reaction_reduction_penalty(list(predecessors(graph, r_node)),
+                                                                      binary_var_dict,
+                                                                      extra_var_index_r)
+                        extra_var_index_r += 1
+
+        # Case 2 Compound and Reduction Penalty
+        for c_node in c_nodes:
+            if len(list(predecessors(graph, c_node))) != 0:
+                currBinVar_c = binary_var_dict[c_node]
+                if len(list(predecessors(graph, c_node))) == 1:
+                    fill4Var = binary_var_dict[list(predecessors(graph, c_node))[0]]
+                    equation += f'({currBinVar_c} + {fill4Var} - 2 * {currBinVar_c} * {fill4Var}) + '
+                else:
+                    equation += f'({currBinVar_c} + y_c{extra_var_index_c} - 2 * {currBinVar_c} * y_c{extra_var_index_c}) + '
+                    binary_var_dict[f'extra Var for c{extra_var_index_c}'] = f'y_c{extra_var_index_c}'
+                    compo_pena_term += compound_reduction_penalty(list(predecessors(graph, c_node)), binary_var_dict,
+                                                              extra_var_index_c)
+                    extra_var_index_c += 1
+
+        # Case 3 Damage Term has different penalty weights
+        damage_only_equation += '8 * ('
+        for c_node in c_nodes:
+            if c_node not in marked_c_nodes:
+                damage_only_equation += f'{binary_var_dict[c_node]} + '
+
+        damage_only_equation = damage_only_equation.rstrip(' + ')
+        damage_only_equation += ") + 3*("
+
+        # Enzyme Damage Term has penalty factor 3 (not explicitly written out)
+        for e_node in e_nodes:
+            damage_only_equation += f'{binary_var_dict[e_node]} + '
+        damage_only_equation = damage_only_equation.rstrip(' + ')
+        damage_only_equation += ") + 5*("
+
+        # Reaction Damage Term has penalty factor 1 (not explicitly written out)
+        for r_node in r_nodes:
+            damage_only_equation += f'{binary_var_dict[r_node]} + '
+        damage_only_equation = damage_only_equation.rstrip(' + ')
+        damage_only_equation += ")"
+
+        if react_pena_term:
+            react_pena_term = react_pena_term.rstrip(' + ')
+            equation += f'({react_pena_term}) + '
+        if compo_pena_term:
+            compo_pena_term = compo_pena_term.rstrip(' + ')
+            equation += f'({compo_pena_term}) + '
+        equation = equation.rstrip(' + ')
+        equation += ")"
+        # print(f'Generated equation: {equation}')
+        tie_qubo_struct = TieQuboStruct(binary_var_dict, equation, damage_only_equation, graph,
+                                        dict_and_sorted_nodes.get_marked_c_nodes())
+        return tie_qubo_struct
+
+    except Exception as e:
+        print(f'Error generating equation: {str(e)}')
+
+
+
+
 # Help functions for Reaction and Compound Order Reduction Penalty
 # Version2: fixed the error with each time the Penalty term gets negated in further recursions.
 def reaction_reduction_penalty(predecessor_list, binary_var_dict, extra_var_index_r):
@@ -305,7 +509,7 @@ def reaction_reduction_penalty(predecessor_list, binary_var_dict, extra_var_inde
                 pen_r_equation += f' - 2 * (1 - {secVal}) * y_r{extra_var_index_r} + 3 * y_r{extra_var_index_r}) + '
             else:
                 pen_r_equation += f'({y_filler} * (1 - {secVal}) - 2 * {y_filler} * y_r{extra_var_index_r}_{i}'
-                pen_r_equation += f' - 2 * (1 - {secVal}) * y_r{extra_var_index_r}_{i} + 3 * y_r{extra_var_index_r}_{i}) +'
+                pen_r_equation += f' - 2 * (1 - {secVal}) * y_r{extra_var_index_r}_{i} + 3 * y_r{extra_var_index_r}_{i}) + '
                 binary_var_dict[f'extra Var for r{extra_var_index_r}, Nr. {i}'] = f'y_r{extra_var_index_r}_{i}'
                 y_filler = f'y_r{extra_var_index_r}_{i}'
 
@@ -349,7 +553,7 @@ def generating_qubo_term_from_graph_two_part(file_path):
         if dict_and_sorted_nodes.has_seed():
             seed = dict_and_sorted_nodes.get_seed()
         # binary_vars, output_term = generate_equation_auto_penalty(graph, dict_and_sorted_nodes[0],
-        tie_qubo_struct = generate_equation_auto_penalty_and_enzyme_damage(graph, dict_and_sorted_nodes)
+        tie_qubo_struct = generate_equation(graph, dict_and_sorted_nodes)
         return tie_qubo_struct  # Added the
         # information of the target nodes, to color the result node, if no node was marked from the start or the
         # Target(s) was/were randomly chosen
