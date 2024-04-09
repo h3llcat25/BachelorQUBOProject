@@ -420,7 +420,7 @@ def generate_equation(graph, dict_and_sorted_nodes):
         meta_rulebreak_penalty = int(math.floor(len(binary_var_dict)))
         print(f'Meta Rulebreaker Penalty is: {meta_rulebreak_penalty}')
 
-        equation += f'{meta_rulebreak_penalty}*({equation}'
+        equation = f'{meta_rulebreak_penalty}*({equation}'
 
         # 1. Reactions and Reduction Penalty:
         if len(r_nodes) > 0:
@@ -454,19 +454,19 @@ def generate_equation(graph, dict_and_sorted_nodes):
                     extra_var_index_c += 1
 
         # Case 3 Damage Term has different penalty weights
-        damage_only_equation += '8 * ('
+        damage_only_equation += '5 * ('
         for c_node in c_nodes:
             if c_node not in marked_c_nodes:
                 damage_only_equation += f'{binary_var_dict[c_node]} + '
 
         damage_only_equation = damage_only_equation.rstrip(' + ')
-        damage_only_equation += ") + 3*("
+        damage_only_equation += ") + 2*("
 
         # Enzyme Damage Term has penalty factor 3 (not explicitly written out)
         for e_node in e_nodes:
             damage_only_equation += f'{binary_var_dict[e_node]} + '
         damage_only_equation = damage_only_equation.rstrip(' + ')
-        damage_only_equation += ") + 5*("
+        damage_only_equation += ") + 3*("
 
         # Reaction Damage Term has penalty factor 1 (not explicitly written out)
         for r_node in r_nodes:
