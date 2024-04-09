@@ -56,7 +56,7 @@ def node_to_solutionsValue_assignment_for_result(bin_var_dict, solution_dict):
     return node_to_sol
 
 
-def modify_dot_graph(graph, solution_dictionary, dot_file, target_nodes):
+def modify_dot_graph(bin_var_dict, graph, solution_dictionary, dot_file, target_nodes):
     # Load the .dot graph file
     rimColorAttribute = "color"
     fillColorAttribute = "fillcolor"
@@ -64,15 +64,26 @@ def modify_dot_graph(graph, solution_dictionary, dot_file, target_nodes):
     filledStyle = "filled"
     rimColor = "purple"
     fillColor = "skyblue"
+    fillColorCmps = "blue"
     targetFillColor = "red"
     enzymeFillColor = "green"
 
     enzymeDamage = 0
     compoundDamage = 0
 
+    x_y_bin_vars = False
+
+    for key in solution_dictionary.keys(): # Check if the solution dictionary for the binary variables is
+        if key.startswith('y') or key.startswith('x'):
+            x_y_bin_vars = True
+            break
+
+    if x_y_bin_vars:
+        solution_dictionary = node_to_solutionsValue_assignment_for_result(bin_var_dict, solution_dictionary)
+
     # Iterate over the dictionary and modify the graph
     for key, value in solution_dictionary.items():
-        if value == 1 or value == 1.0:
+        if (value == 1 or value == 1.0) and not key.startswith("extra"):
             node = graph.get_node(key)
             if not node:
                 node = graph.get_node(f"\"{key}\"")
@@ -89,6 +100,7 @@ def modify_dot_graph(graph, solution_dictionary, dot_file, target_nodes):
                 node_type = node.get("type")
                 if node_type == "C":
                     compoundDamage += 1
+                    node.set(fillColorAttribute, fillColorCmps)
                 if node_type == "E":
                     enzymeDamage += 1
                     node.set(fillColorAttribute, enzymeFillColor)
@@ -100,11 +112,8 @@ def modify_dot_graph(graph, solution_dictionary, dot_file, target_nodes):
     new_filename = f"xtra_modified_{base_name}"
     new_filepath = os.path.join(dir_name, new_filename)
 
-    print(f'Enzyme Damage: {enzymeDamage}')
-    print(f'Compound Damage: {compoundDamage}')
+    return enzymeDamage, compoundDamage, graph, new_filepath
 
-    # Write the modified graph back to the new .dot file
-    graph.write(new_filepath)
 
 
 def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): # (bin_vars_dict, modified_opt_term,
@@ -131,6 +140,7 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
                 objective_dict_whole[term] += coeff
             else:
                 objective_dict_whole[term] = coeff
+
 
     # Set the objective
     objective = QuadExpr()
@@ -161,6 +171,7 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
     return solution
 
 
+# Aktuell
 def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(file_path):
     tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
     bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = tie_qubo_struct.get_dict_objectives_graph_targets()
@@ -195,49 +206,39 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
     # print(nodeNames_to_binaryMap)
     # print(result.solution)
     # print(result.objective_value)
-    modify_dot_graph(graph, solution_dict, file_path, marked_nodes)  # graph, solution_dictionary, dot_file, target_nodes
+    enz_damag, cmp_damag, res_graph, end_filepath = modify_dot_graph(bin_vars_dict, graph, solution_dict, file_path,
+                                                                     marked_nodes)
+    print(f'Enzyme Damage: {enz_damag}')
+    print(f'Compound Damage: {cmp_damag}')
+    # Write the modified graph back to the new .dot file
+    res_graph.write(end_filepath)
     # return qubo_dict
 
     # print(solution_dict)
 
-
-def old_get_qubo_matrix_for_dwave_qa(file_path):
-    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = generating_qubo_term_from_graph_two_part(file_path)
+def check_the_q_matrices_gurobi_dwave(file_path):
+    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
+    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = tie_qubo_struct.get_dict_objectives_graph_targets()
     variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
 
     modified_opt_term = just_simplifying_objective_function(optimization_term, variables)
     modified_damage_opt_term = sympy.sympify(output_damage_only, locals=variables)
 
-    print(modified_damage_opt_term)
-    print(bin_vars_dict)
+    q_dict, base_coeff_mtrx = test_check_q_creation(modified_opt_term, modified_damage_opt_term)
 
-    qmatrix = generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
-    qmatrix_damage = generate_final_np_matrix(bin_vars_dict, str(modified_damage_opt_term))
-
-    cmplt_matrix = add_damage_matrix_to_q_matrix(qmatrix, qmatrix_damage)
-
-    qubo_dict = defaultdict(int)
-    n = cmplt_matrix.shape[0]  # Assuming a square matrix
-    bin_vars_list = list(bin_vars_dict.values())
-
-    for i in range(n):
-        for j in range(i, n):  # Only need to iterate over the upper triangle due to symmetry
-            if cmplt_matrix[i][j] != 0:  # Only consider non-zero entries
-                qubo_dict[(bin_vars_list[i], bin_vars_list[j])] = cmplt_matrix[i][j]
-
-    return qubo_dict, graph, bin_vars_dict, marked_nodes
-
-    # print(solution_dict)
-
+    print(q_dict)
+    print(base_coeff_mtrx)
 
 def get_qubo_dict_for_dwave_qa(file_path):
-    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = generating_qubo_term_from_graph_two_part(file_path)
+    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
+    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = tie_qubo_struct.get_dict_objectives_graph_targets()
+
     variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
 
     modified_opt_term = just_simplifying_objective_function(optimization_term, variables)
     modified_damage_opt_term = sympy.sympify(output_damage_only, locals=variables)
 
-    q_dict = creating_qubo_dict_sympy(modified_opt_term, modified_damage_opt_term)
+    q_dict = creating_qubo_dict_sympy(bin_vars_dict, modified_opt_term, modified_damage_opt_term)
 
     return q_dict, graph, bin_vars_dict, marked_nodes
 
@@ -248,10 +249,17 @@ def main():
     # param_search_and_auto_solver_auto_penalty_two_parted(
     # old_get_qubo_matrix_for_dwave_qa(
     param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
+    # check_the_q_matrices_gurobi_dwave(
+        # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
+        # "\\eco_filtering_dot\\Glycerolipid.dot")
+        "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests"
+        "\\eco_filtering_dot\\Biosynthesis of amino acids.dot")
         # "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
         # "\\Glycerolipid_marked.dot")
-        "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
-        "\\eco_filtering_dot\\Glycine_serine_threonine.dot")
+        # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots\\hsa_filtering_dot\\Nucleotide metabolism.dot")
+        # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
+        # "\\eco_filtering_dot\\Glycine_serine_threonine_test.dot")
+        # "\\mmu_filtering_dot\\Glycine_serine_threonine.dot")
         # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\graphoz\\a.dot")
         #  "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\graphoz\\a.dot")
     # "\\Biosynthesis of amino acids marked.dot")
