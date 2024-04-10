@@ -111,17 +111,31 @@ def switch_case_if(value, bqm, q_matrix):
 
 def auto_emb_solv_chainstrength(file_path, ch_str_vals):
     qubo_matrix, graph, bin_vars_dict, marked_nodes = get_qubo_dict_for_dwave_qa(file_path)
+    sampler = EmbeddingComposite(DWaveSampler())
+
+    num_runs = 2500  # Kann angepasst werden, um optimale Ergebnisse zu finden
+
+    # Simulated Annealing durchführen
     bqm = BinaryQuadraticModel.from_qubo(qubo_matrix)
-    best_sample = solve_w_dwave_sampler_auto_empedding(qubo_matrix)
+    # response = sampler.sample(bqm, chain_strength=float(chainstrength), num_reads=num_runs)
+    response = sampler.sample_qubo(qubo_matrix, chain_strength=10.0, num_reads=num_runs)
+
+    dwave.inspector.show(response)
+
+    # Das optimale Ergebnis ermitteln
+    best_sample = response.first.sample
+    best_energy = response.first.energy
+    print(best_energy)
 
     print(best_sample)
     print(bin_vars_dict)
 
-    enz_damag, cmp_damag, res_graph, end_filepath = modify_dot_graph(bin_vars_dict, graph, best_sample, file_path, marked_nodes)
+    enz_damag, cmp_damag, res_graph, end_filepath = modify_dot_graph(bin_vars_dict, best_sample, file_path, marked_nodes)
 
     print(f'Enzyme Damage: {enz_damag}')
     print(f'Compound Damage: {cmp_damag}')
     # Write the modified graph back to the new .dot file
+    res_graph.del_node('\"\\r\\n\"')
     res_graph.write(end_filepath)
     print(qubo_matrix)
 
@@ -146,31 +160,19 @@ def solver_manager(file_path):
     print(best_sample)
     print(bin_vars_dict)
 
-    enz_damag, cmp_damag, res_graph, end_filepath = modify_dot_graph(bin_vars_dict, graph, best_sample, file_path,
-                                                                     marked_nodes)
+    enz_damag, cmp_damag, res_graph, end_filepath = modify_dot_graph(bin_vars_dict, best_sample, file_path, marked_nodes)
 
     print(f'Enzyme Damage: {enz_damag}')
     print(f'Compound Damage: {cmp_damag}')
     # Write the modified graph back to the new .dot file
+    res_graph.del_node('\"\\r\\n\"')
     res_graph.write(end_filepath)
     print(qubo_matrix)
-    # graph, solution_dictionary, dot_file, target_nodes
-    # modify_dot_graph(graph, solution_dictionary, dot_file, target_nodes)
-
-    # Print the results
-    # print("Solutions:")
-    # for sample, energy in result.data(['sample', 'energy']):
-    #     print(f"Sample: {sample}, Energy: {energy}")
-
-    # print(bqm)
-    # cqm = build_cqm(G, num_colors)
-
-    # sample = run_hybrid_solver(cqm)
 
 
 # ------- Main program -------
 if __name__ == "__main__":
     file_path = "/workspaces/graph-coloring/Citrate_cycle_marked.dot"
-    auto_emb_solv_chainstrength(file_path)
+    auto_emb_solv_chainstrength(file_path, 37)
     # solver_manager(file_path)
 
