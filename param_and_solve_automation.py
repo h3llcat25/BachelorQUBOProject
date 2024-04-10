@@ -56,7 +56,8 @@ def node_to_solutionsValue_assignment_for_result(bin_var_dict, solution_dict):
     return node_to_sol
 
 
-def modify_dot_graph(bin_var_dict, graph, solution_dictionary, dot_file, target_nodes):
+def modify_dot_graph(bin_var_dict, solution_dictionary, dot_file, target_nodes):
+    graph = pydotplus.graph_from_dot_file(dot_file)
     # Load the .dot graph file
     rimColorAttribute = "color"
     fillColorAttribute = "fillcolor"
@@ -173,7 +174,7 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
 
 # Aktuell
 def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(file_path):
-    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
+    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path,5,2)
     bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = tie_qubo_struct.get_dict_objectives_graph_targets()
     variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
 
@@ -206,8 +207,10 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
     # print(nodeNames_to_binaryMap)
     # print(result.solution)
     # print(result.objective_value)
-    enz_damag, cmp_damag, res_graph, end_filepath = modify_dot_graph(bin_vars_dict, graph, solution_dict, file_path,
+    enz_damag, cmp_damag, res_graph, end_filepath = modify_dot_graph(bin_vars_dict, solution_dict, file_path,
                                                                      marked_nodes)
+
+    res_graph.del_node('\"\\r\\n\"')
     print(f'Enzyme Damage: {enz_damag}')
     print(f'Compound Damage: {cmp_damag}')
     # Write the modified graph back to the new .dot file
@@ -216,18 +219,6 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
 
     # print(solution_dict)
 
-def check_the_q_matrices_gurobi_dwave(file_path):
-    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
-    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = tie_qubo_struct.get_dict_objectives_graph_targets()
-    variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
-
-    modified_opt_term = just_simplifying_objective_function(optimization_term, variables)
-    modified_damage_opt_term = sympy.sympify(output_damage_only, locals=variables)
-
-    q_dict, base_coeff_mtrx = test_check_q_creation(modified_opt_term, modified_damage_opt_term)
-
-    print(q_dict)
-    print(base_coeff_mtrx)
 
 def get_qubo_dict_for_dwave_qa(file_path):
     tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
@@ -250,10 +241,12 @@ def main():
     # old_get_qubo_matrix_for_dwave_qa(
     param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
     # check_the_q_matrices_gurobi_dwave(
-        # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
-        # "\\eco_filtering_dot\\Glycerolipid.dot")
-        "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests"
-        "\\eco_filtering_dot\\Biosynthesis of amino acids.dot")
+        #"C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests"
+        #"\\eco_filtering_dot\\Biosynthesis of amino acids_m.dot")
+    "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
+    "\\eco_filtering_dot\\Citrate_cycle_marked.dot")
+        # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests"
+        # "\\eco_filtering_dot\\Biosynthesis of amino acids.dot")
         # "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
         # "\\Glycerolipid_marked.dot")
         # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots\\hsa_filtering_dot\\Nucleotide metabolism.dot")
