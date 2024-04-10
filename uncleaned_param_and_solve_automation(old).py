@@ -1,10 +1,13 @@
 import os
+from collections import defaultdict
+
 import sympy
 from gurobi_optimods.qubo import solve_qubo
 from gurobipy import Model, GRB, QuadExpr
+from sympy import symbols
 
-from qMatrixBuilder import *
-from act_qubo_term_generation import *
+# from qMatrixBuilder import *
+# from act_qubo_term_generation import *
 
 
 # from dwave_qbsolv import QBSolv
@@ -326,6 +329,52 @@ def main():
         # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\graphoz\\a.dot")
         #  "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\graphoz\\a.dot")
     # "\\Biosynthesis of amino acids marked.dot")
+
+
+# 4.4.24
+
+def old_get_qubo_matrix_for_dwave_qa(file_path):
+    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = generating_qubo_term_from_graph_two_part(file_path)
+    variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
+
+    modified_opt_term = just_simplifying_objective_function(optimization_term, variables)
+    modified_damage_opt_term = sympy.sympify(output_damage_only, locals=variables)
+
+    print(modified_damage_opt_term)
+    print(bin_vars_dict)
+
+    qmatrix = generate_final_np_matrix(bin_vars_dict, str(modified_opt_term))
+    qmatrix_damage = generate_final_np_matrix(bin_vars_dict, str(modified_damage_opt_term))
+
+    cmplt_matrix = add_damage_matrix_to_q_matrix(qmatrix, qmatrix_damage)
+
+    qubo_dict = defaultdict(int)
+    n = cmplt_matrix.shape[0]  # Assuming a square matrix
+    bin_vars_list = list(bin_vars_dict.values())
+
+    for i in range(n):
+        for j in range(i, n):  # Only need to iterate over the upper triangle due to symmetry
+            if cmplt_matrix[i][j] != 0:  # Only consider non-zero entries
+                qubo_dict[(bin_vars_list[i], bin_vars_list[j])] = cmplt_matrix[i][j]
+
+    return qubo_dict, graph, bin_vars_dict, marked_nodes
+
+    # print(solution_dict)
+
+
+# Funktion um zu checken ob die Q Matrix von Gurobi gleich der Y Matrix von selbst kreation ist.
+def check_the_q_matrices_gurobi_dwave(file_path):
+    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
+    bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = tie_qubo_struct.get_dict_objectives_graph_targets()
+    variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
+
+    modified_opt_term = just_simplifying_objective_function(optimization_term, variables)
+    modified_damage_opt_term = sympy.sympify(output_damage_only, locals=variables)
+
+    q_dict, base_coeff_mtrx = test_check_q_creation(modified_opt_term, modified_damage_opt_term)
+
+    print(q_dict)
+    print(base_coeff_mtrx)
 
 
 if __name__ == '__main__':
