@@ -7,35 +7,43 @@ from tie_graph_problem import TieGraphProblem
 from tie_qubo_struct import TieQuboStruct
 
 # Helpfunction for getting predecessors of a specific Node in the .Dot file, Wichtig, gibt ne list of strings zurück
-def predecessors(graph, target_node_name):
-    # Specify the node for which you want to find the predecessors
-    # Initialize an empty list to hold the predecessors
-    predecessors = []
+# Ist Smart, weil wenn es durch die
+def smart_predecessors(graph, target_node_name):
+    target_node = graph.get_node(target_node_name)[0]
+    trgt_node_type = target_node.get('type')
 
-    # Iterate over the edges in the graph
-    for edge in graph.get_edges():
-        # Check if the edge points to the target node
-        if edge.get_destination() == target_node_name or edge.get_destination() == f'\"{target_node_name}\"':
-            # If so, add the source node of the edge to the predecessors list
-            predecessors.append(edge.get_source())
+    if trgt_node_type == "C":
+        predecessor_set = {edge.get_source() for edge in graph.get_edges() if edge.get_destination() == target_node_name}
+        successor_set = {edge.get_destination() for edge in graph.get_edges() if edge.get_source() == target_node_name}
 
-    # Now 'predecessors' contains the IDs of the nodes that are predecessors of 'target_node'
-    return predecessors
+        for r_node_name in (predecessor_set & successor_set):
+            r_node = graph.get_node(r_node_name)[0]
+            if r_node.get('color') is None:
+                r_node.set('color', 'lime')
+
+        return list(predecessor_set)
+
+    if trgt_node_type == "R":
+        predecessor_set = {edge.get_source() for edge in graph.get_edges() if edge.get_destination() == target_node_name}
+        if target_node.get('color') is None:
+            return list(predecessor_set)
+
+        # If it is lime, it means, it is a revertable Reaktion and it needs different treatment
+        if target_node.get('color') == "lime":
+            successor_set = {edge.get_destination() for edge in graph.get_edges() if edge.get_source() == target_node_name}
+            non_rev_predecessors = predecessor_set - successor_set
+            return list(non_rev_predecessors)
+
+        else:
+            raise ValueError("sometin wrong with predecessors function")
 
 
 # Helpfunction for getting successors of a specific Node in the .Dot file
 def successors(graph, target_node_name):
     # Specify the node for which you want to find the successors
 
-    # Initialize an empty list to hold the successors
-    successors = []
-
-    # Iterate over the edges in the graph
-    for edge in graph.get_edges():
-        # Check if the edge comes from the target node
-        if edge.get_source() == target_node_name or edge.get_destination() == f'\"{target_node_name}\"':
-            # If so, add the get_destination node of the edge to the successors list
-            successors.append(edge.get_destination())
+    # Iterate over the edges in the graph, Check if the edge comes from the target node, If so, add the get_destination node of the edge to the successors list
+    successors = [edge.get_destination() for edge in graph.get_edges() if edge.get_source() == target_node_name]
 
     # Now 'successors' contains the IDs of the nodes that are successors of 'target_node'
     return successors
@@ -172,115 +180,49 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
         return None
 
 
-def generate_equation_set_up_phase(graph, dict_and_sorted_nodes):
-    # Setting up all necessary variables, lists, indices, and equation/penalty terms
-    binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = dict_and_sorted_nodes.get_dict_and_lists()
-    abstract_var_dict = dict_and_sorted_nodes.get_abstrct_dict()
-    # start from where to count for the extra variables for reactions r and compounds c.
-    extra_var_index_r = 1
-    equation = ''
-    react_pena_term = ''
-    compo_pena_term = ''
-    # Start of the set-up for inevitable inhibitions:
-    # 1. Marked compound nodes and reactions
-    all_successors_set_up_reacts = set()
-    all_predecessors_set_up_reacts = set()
-
+# AKTUELL
+def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_weight):
     try:
+        binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = dict_and_sorted_nodes.get_dict_and_lists()
+        abstract_var_dict = dict_and_sorted_nodes.get_abstrct_dict()
+        abstrct_terms = ''
+
+        # start from where to count for the extra variables for reactions r and compounds c.
+        # Setting up Abstract Dictionary to better check in the results
+        extra_var_index_r = 1
+        extra_var_index_c = 1
+
+        damage_only_equation = ''
+        equation = ''
+        react_pena_term = ''
+        compo_pena_term = ''
+        # Start of the set-up for inevitable inhibitions:
+        # 1. Marked compound nodes and reactions
+        all_successors_set_up_reacts = set()
+        all_predecessors_set_up_reacts = set()
+
+################ Start Set up ##########
+
         # 1.1 Generate the terms for each marked_node x, that it has to get inhibited (1-x)
         # And create the predecessor and successor sets for the next step
         for marked_node in marked_c_nodes:
             equation += f'(1 - {binary_var_dict[marked_node]}) + '
-            all_successors_set_up_reacts.update(set(successors(graph, marked_node)))
-            all_predecessors_set_up_reacts.update(set(predecessors(graph, marked_node)))
+
+            marked_node_successors = set(successors(graph, marked_node))
+            marked_node_predecessors = set(smart_predecessors(graph, marked_node))
+
+            all_successors_set_up_reacts.update(marked_node_successors)
+            all_predecessors_set_up_reacts.update(marked_node_predecessors)
 
         # 2. Generate the terms for each predecessor and successor node y, that it has to get inhibited (1-y)
         all_set_up_reacts = all_predecessors_set_up_reacts | all_successors_set_up_reacts
-        for node in all_set_up_reacts:
-            equation += f'(1 - {binary_var_dict[node]}) + '
+        equation += ''.join([f'(1 - {binary_var_dict[node]}) + ' for node in all_set_up_reacts])
 
-        # 3. find the successor compound nodes, from the reactions the target compounds are reactants from
-        # and put them in a term to inhibit them
-        all_successors_set_up_compounds = set()
-        for r_node in all_successors_set_up_reacts:
-            current_successors_set = set(successors(graph, r_node))
-            all_successors_set_up_compounds.update(current_successors_set)
+        # 3. take out every r_node that is only a successor and not a reversable or a predecessor of a target
+        for r_node in (all_successors_set_up_reacts - all_predecessors_set_up_reacts):
+            r_nodes.remove(r_node)
 
-            current_predecessors_set = set(predecessors(graph, r_node))
-            if current_predecessors_set.isdisjoint(current_successors_set): # Wenn der Reaktionsknoten nicht auch noch
-                # mit anderen Compounds über bidirektionale Kanten verbunden ist, dann nimm den Knoten aus der Menge der
-                # Reaktions knoten heraus:
-                r_nodes.remove(r_node)
-
-        # 3.1 Gehe durch alle Compounds die auf Reaktionen folgen und checke, ob all ihre reaktionen
-        # theoretisch inhibiert werden.
-        negligible_compounds = set(marked_c_nodes)
-        for successor_c_node in all_successors_set_up_compounds - set(marked_c_nodes):
-            if set(predecessors(graph, successor_c_node)).issubset(all_set_up_reacts):
-                equation += f'(1 - {binary_var_dict[successor_c_node]}) + '
-                negligible_compounds.add(successor_c_node)
-
-        c_nodes = list(set(c_nodes) - negligible_compounds)
-
-        # 4. Do reaction propagation for the predecessors of the Reaction nodes for the marked c nodes
-        for r_node in all_predecessors_set_up_reacts:
-            if r_node in r_nodes:
-                r_nodes.remove(r_node)
-
-            current_successors_set = set(successors(graph, r_node))
-            current_predecessors_set = set(predecessors(graph, r_node))
-            marked_c_nodes_set = set(marked_c_nodes)
-            if current_predecessors_set.isdisjoint(current_successors_set) and negligible_compounds & current_predecessors_set and negligible_compounds & current_successors_set:  # Wenn der Reaktionsknoten nicht auch noch
-                # mit anderen Compounds über bidirektionale Kanten verbunden ist
-                continue
-
-
-            valid_react_predecessors = list(set(predecessors(graph, r_node)) - negligible_compounds)
-
-            if len(valid_react_predecessors) == 1:  # If r_node has just one predecessor
-                equation += f'(1 - {binary_var_dict[valid_react_predecessors[0]]}) + '
-            elif len(valid_react_predecessors) == 2:  # der Term heißt: mind. ein element ist inhibiert
-                equation += f'(1 - {binary_var_dict[valid_react_predecessors[0]]}) * (1 - {binary_var_dict[valid_react_predecessors[1]]}) + '
-            else:  # If there are more Predecessors left than 1:
-                equation += f'(1 - {binary_var_dict[valid_react_predecessors[0]]} * y_r{extra_var_index_r}) + '
-                binary_var_dict[f'extra Var for r{extra_var_index_r}'] = f'y_r{extra_var_index_r}'
-                react_pena_term += reaction_reduction_penalty(valid_react_predecessors[1:], binary_var_dict,
-                                                              extra_var_index_r)
-                extra_var_index_r += 1
-
-        dict_and_sorted_nodes.set_r_nodes(r_nodes)
-        dict_and_sorted_nodes.set_c_nodes(c_nodes)
-        dict_and_sorted_nodes.set_equation(equation)
-        dict_and_sorted_nodes.set_react_pena_term(react_pena_term)
-        dict_and_sorted_nodes.set_extra_var_index_r(extra_var_index_r)
-
-        dict_and_sorted_nodes.set_abstrct_dict(abstract_var_dict)
-
-        return dict_and_sorted_nodes
-    except Exception as e:
-        print(f'Error generating set up: {str(e)}')
-
-
-# AKTUELL
-def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_weight):
-    try:
-        # Set up where all clear to inhibit nodes get put up into the equation
-        dict_and_sorted_nodes = generate_equation_set_up_phase(graph, dict_and_sorted_nodes)
-
-        # Initiating all necessary variables, lists, indices, and equation/penalty terms for the other terms
-        binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = dict_and_sorted_nodes.get_dict_and_lists()
-
-        # start from where to count for the extra variables for reactions r and compounds c.
-        extra_var_index_r = dict_and_sorted_nodes.get_extra_var_index_r()
-        extra_var_index_c = 1
-        equation = dict_and_sorted_nodes.get_equation()
-        damage_only_equation = ''
-        react_pena_term = dict_and_sorted_nodes.get_react_pena_term()
-        compo_pena_term = ''
-
-        # Setting up Abstract Dictionary to better check in the results
-        abstrct_dict = dict_and_sorted_nodes.get_abstrct_dict()
-        abstrct_terms = dict_and_sorted_nodes.get_abstract_term()
+        ####### Ende Set UP ##############
 
         # Automatic Penalty calculation, based on if all Reactions, Enzymes and marked Compounds of the metabolic
         # network are inhibited
@@ -289,36 +231,38 @@ def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_we
 
         equation = f'{meta_rulebreak_penalty}*({equation}'
 
-        # 1. Reactions and Reduction Penalty:
-        if len(r_nodes) > 0:
-            for r_node in r_nodes:  # For all Reaction nodes
-                if len(list(predecessors(graph, r_node))) > 0:  # If the number of predecessors is bigger than zero.
-                    currBinVar_r = binary_var_dict[r_node]  # currBinVar contains r_node
-                    if len(list(predecessors(graph, r_node))) == 1:  # If r_node has just one predecessor
-                        equation += f'{binary_var_dict[list(predecessors(graph, r_node))[0]]} + {currBinVar_r}'
-                        equation += f' - 2 * {binary_var_dict[list(predecessors(graph, r_node))[0]]} * {currBinVar_r} + '
-                    else:  # If there are more Predecessors than 1:
-                        equation += f'(1 - {currBinVar_r} - y_r{extra_var_index_r}'
-                        equation += f' + 2 * {currBinVar_r} * y_r{extra_var_index_r}) + '
-                        binary_var_dict[f'extra Var for r{extra_var_index_r}'] = f'y_r{extra_var_index_r}'
-                        react_pena_term += reaction_reduction_penalty(list(predecessors(graph, r_node)),
-                                                                      binary_var_dict,
-                                                                      extra_var_index_r)
-                        extra_var_index_r += 1
-
         # Case 2 Compound and Reduction Penalty
         for c_node in c_nodes:
-            if len(list(predecessors(graph, c_node))) != 0:
+            c_predecessors = smart_predecessors(graph, c_node)
+            c_pred_len = len(c_predecessors) # length of the predecessor list of c
+            if c_pred_len != 0:
                 currBinVar_c = binary_var_dict[c_node]
-                if len(list(predecessors(graph, c_node))) == 1:
-                    fill4Var = binary_var_dict[list(predecessors(graph, c_node))[0]]
+                if c_pred_len == 1:
+                    fill4Var = binary_var_dict[c_predecessors[0]]
                     equation += f'({currBinVar_c} + {fill4Var} - 2 * {currBinVar_c} * {fill4Var}) + '
                 else:
                     equation += f'({currBinVar_c} + y_c{extra_var_index_c} - 2 * {currBinVar_c} * y_c{extra_var_index_c}) + '
                     binary_var_dict[f'extra Var for c{extra_var_index_c}'] = f'y_c{extra_var_index_c}'
-                    compo_pena_term += compound_reduction_penalty(list(predecessors(graph, c_node)), binary_var_dict,
-                                                              extra_var_index_c)
+                    compo_pena_term += compound_reduction_penalty(c_predecessors, binary_var_dict, extra_var_index_c)
                     extra_var_index_c += 1
+
+        # 3. Reactions and Reduction Penalty:
+        # With smart predecessors, the list will automatically handle revertable reactions
+        if len(r_nodes) > 0:
+            for r_node in r_nodes:  # For all Reaction nodes
+                r_smrt_prdcssrs = smart_predecessors(graph, r_node)
+                r_smrt_pred_len = len(r_smrt_prdcssrs)
+                if r_smrt_pred_len > 0:  # If the number of predecessors is bigger than zero.
+                    currBinVar_r = binary_var_dict[r_node]  # currBinVar contains r_node
+                    if r_smrt_pred_len == 1:  # If r_node has just one predecessor
+                        equation += f'{binary_var_dict[r_smrt_prdcssrs[0]]} + {currBinVar_r}'
+                        equation += f' - 2 * {binary_var_dict[r_smrt_prdcssrs[0]]} * {currBinVar_r} + '
+                    else:  # If there are more Predecessors than 1:
+                        equation += f'(1 - {currBinVar_r} - y_r{extra_var_index_r}'
+                        equation += f' + 2 * {currBinVar_r} * y_r{extra_var_index_r}) + '
+                        binary_var_dict[f'extra Var for r{extra_var_index_r}'] = f'y_r{extra_var_index_r}'
+                        react_pena_term += reaction_reduction_penalty(r_smrt_prdcssrs, binary_var_dict, extra_var_index_r)
+                        extra_var_index_r += 1
 
         # FIND ME
         # Case 3 Damage Term has different penalty weights: cmp_dmg_weight ++++++++++++++++++++++++++++++++++++
@@ -356,8 +300,6 @@ def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_we
 
     except Exception as e:
         print(f'Error generating equation: {str(e)}')
-
-
 
 
 # Help functions for Reaction and Compound Order Reduction Penalty
@@ -433,10 +375,13 @@ def generating_qubo_term_from_graph_two_part(file_path, cmp_dmg_weight=5, enzym_
 # binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = create_binary_variables_plus_enzymes(graph)
 
 if __name__ == '__main__':
-    graph = read_dot_file_pydotplus(
-        "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\graphoz\\c.dot")
-    # print(graph.get_node("H"))
-    nodii = "1.013.2"
-    print(graph.get_node(f"\"{nodii}\""))
-    # print(generating_qubo_term_from_graph_two_part("/workspaces/graph-coloring/Citrate_cycle_marked.dot")[2])
+
+    file_path = ("C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests\\eco_filtering_dot\\Biosynthesis of amino acids_m.dot")
+
+
+    # Load the .dot file
+    graph = pydotplus.graph_from_dot_file(file_path)
+
+    # Write the modified graph to a new .dot file
+    graph.write('ZHELLO_graph.dot')
 
