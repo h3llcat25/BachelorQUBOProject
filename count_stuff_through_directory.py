@@ -4,32 +4,60 @@ import sys
 import pydotplus
 import pandas as pd
 
-from contextlib import redirect_stdout
+
+def predecessors(graph, target_node_name):
+    # Specify the node for which you want to find the predecessors
+    # Initialize an empty list to hold the predecessors
+    predecessors = []
+
+    # Iterate over the edges in the graph
+    for edge in graph.get_edges():
+        # Check if the edge points to the target node
+        if edge.get_destination() == target_node_name or edge.get_destination() == f'\"{target_node_name}\"':
+            # If so, add the source node of the edge to the predecessors list
+            predecessors.append(edge.get_source())
+
+    # Now 'predecessors' contains the IDs of the nodes that are predecessors of 'target_node'
+    return predecessors
 
 
 def run_filo_reader(directory):
+    disease_comp_list = ["C00036", "C01165", "C00183", "C00148", "C00074", "C00082", "C05382", "C00169", "C00049",
+                         "C00236", "C03287", "C00327", "C01005",
+                         "C00199", "C01005" "C00141", "C00407", "C00233", "C00119"]
+
     # Iterate through each subdirectory in the given directory
     for subdir, dirs, files in os.walk(directory):
         for dirct in dirs:
             # Define the path to the current subdirectory
             subdirectory_path = os.path.join(subdir, dirct)
 
-            # Create a corresponding "_solutions" directory
-            output_directory_path = os.path.join(subdir, f"{dirct}_solutions")
+            # Create a corresponding "texts_" directory
+            output_directory_path = os.path.join(subdir, f"texts_{dirct}")
             os.makedirs(output_directory_path, exist_ok=True)
 
             # Iterate through each file in the subdirectory
             for file in os.listdir(subdirectory_path):
                 file_path = os.path.join(subdirectory_path, file)
 
-                psa.param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(file_path)
-
                 # Define the output file path
-                # output_file_path = os.path.join(output_directory_path, f"{file[:-3]}_output")
+                output_file_path = os.path.join(output_directory_path, f"{file}_output.txt")
 
                 # Redirect stdout to the output file
-                # with open(output_file_path, 'w') as output_file, redirect_stdout(output_file):
-                #     psa.param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes(file_path)
+                with open(output_file_path, 'w') as output_file, redirect_stdout(output_file):
+                    psa.param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes(file_path)
+
+
+def write_matching_nodes_from_files(start_directory, output_file='matchings.txt'):
+    disease_comp_list = ["C00036", "C01165", "C00183", "C00148", "C00074", "C00082", "C05382", "C00169", "C00049",
+                         "C00236", "C03287", "C00327", "C01005",
+                         "C00199", "C01005" "C00141", "C00407", "C00233", "C00119"]
+
+    with open(output_file, 'w') as outfile:  # Open the output file for writing
+        for subdir, dirs, files in os.walk(start_directory):  # Traverse the directory
+            for file in files:
+                file_path = os.path.join(subdir, file)  # Get the full path of the file
+                outfile.write(f"File: {file_path}\nMatching Nodes: {search_node_names(file_path, disease_comp_list)}\n\n")
 
 
 def count_difference_of_bin_vars_for_each_method(start_directory):
@@ -95,8 +123,6 @@ def search_node_names(dot_file_path, names_to_search):
     return matching_names
 
 
-# TODO: Es ist wichtig zu wissen, dass die art wie die parents gecountet werden anders ist als gedacht! man darf die
-#  bidirectionalen Knoten nicht von den reaktionen zählen sondern nur von den Cmpounds
 def calculate_total_bin_vars_needed(dot_file_path):
     graph = pydotplus.graph_from_dot_file(dot_file_path)
     graph.del_node("\"\\r\\n\"")  # Muss gelöscht werden, da als Artefakt immer zusätzlich als Knoten generiert wird
@@ -110,8 +136,7 @@ def calculate_total_bin_vars_needed(dot_file_path):
     for node in graph.get_nodes():
         nr_of_nodes += 1
         # Get the list of predecessors for the current node
-        # predecessor_lst = predecessors(graph, node.get_name())
-        predecessor_lst = []
+        predecessor_lst = predecessors(graph, node.get_name())
 
         # Check if the node has at least one predecessor
         if predecessor_lst:
@@ -123,8 +148,14 @@ def calculate_total_bin_vars_needed(dot_file_path):
             sum_predecessors_plus_one += (num_predecessors + 1)
     return  nr_of_nodes, nr_of_nodes + sum_predecessors_plus_one, nr_of_nodes + sum_predecessors_minus_one, sum_predecessors_plus_one, sum_predecessors_minus_one
 
+# Example usage
+# run_filo_reader("largeDots")
+disease_comp_list = ["C00036", "C01165", "C00183", "C00148", "C00074", "C00082", "C05382", "C00169", "C00049",
+                     "C00236", "C03287", "C00327", "C00199", "C01005", "C00141", "C00407", "C00233", "C00119"]
+
+# print(disease_comp_list)
+# print(set(disease_comp_list))
 
 # Example usage
-start_directory = 'C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots'  # Replace with your start directory
-run_filo_reader(start_directory)
-# count_difference_of_bin_vars_for_each_method(start_directory)
+start_directory = 'C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots'  # Replace with your start directory
+count_difference_of_bin_vars_for_each_method(start_directory)

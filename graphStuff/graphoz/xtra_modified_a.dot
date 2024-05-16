@@ -1,15 +1,16 @@
 digraph G {
-"5.1.3.13" [color=purple, fillcolor=blue, style=filled, type=E];
-C [type=C];
-R [color=purple, fillcolor=blue, style=filled, type=R];
-"5.1" [color=purple, fillcolor=blue, style=filled, type=E];
-Bb [type=C];
-Rr [color=purple, fillcolor=blue, style=filled, type=R];
-D [color=red, fillcolor=red, style=filled, type=C];
-"5.1.3.13" -> R;
-C -> R;
-R -> D;
-"5.1" -> Rr;
-Bb -> Rr;
-Rr -> D;
+E1 [fillcolor=green, style=filled];
+C1 [type=C];
+R1 [ fillcolor=lightblue, style=filled, type=R];
+E2 [ fillcolor=green, style=filled, type=E];
+C2 [type=C];
+R2 [fillcolor=lightblue, style=filled, type=R];
+C3 [fillcolor=red, style=filled, type=C];
+
+C1 -> R1;
+E1 -> R1;
+C2 -> R2;
+E2 -> R2;
+R1 -> C3;
+R2 -> C3;
 }

@@ -1,12 +1,13 @@
 digraph G {
-    E1 [type=E]
-    C1 [type=C]
-    R1 [type=R]
-    E2 [type=E]
-    C2 [type=C]
-    R2 [type=R]
-    C3 [color=red, type=C]
-    
+    rankdir=bt;
+    E1 [fillcolor="#8FFF8090", type=E, shape=circle, style=filled]
+    C1 [fillcolor="#FF000020", type=C, shape=triangle, style=filled]
+    R1 [fillcolor="#5CDCFF80", type=R, shape=hexagon, style=filled]
+    E2 [fillcolor="#8FFF8090", type=E, shape=circle, style=filled]
+    C2 [fillcolor="#FF000020", type=C, shape=triangle, style=filled]
+    R2 [fillcolor="#5CDCFF80", type=R, shape=hexagon, style=filled]
+    C3 [fillcolor="#FF000020", type=C, shape=triangle, style=filled]
+
     E1 -> R1
     C1 -> R1
     R1 -> C3

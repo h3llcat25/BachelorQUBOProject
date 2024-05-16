@@ -116,6 +116,22 @@ def modify_dot_graph(bin_var_dict, solution_dictionary, dot_file, target_nodes):
     return enzymeDamage, compoundDamage, graph, new_filepath
 
 
+def scale_value(data, value):
+    if value > 90:
+        # Scale values above 90 to be between 90 and 200
+        # Assuming max value in data likely exceeds 200, using it to dynamically scale
+        max_value = max(data.values())
+        return 90 + (value - 90) * (400 / (max_value - 90))  # Scale from 90 to max_value to 90-200
+    elif value < -90:
+        # Scale values below -90 to be between -90 and -180
+        # Assuming min value in data likely below -180, using it to dynamically scale
+        min_value = min(data.values())
+        return -90 - (abs(value + 90) * (200 / (abs(min_value) - 90)))  # Scale from -90 to min_value to -90--180
+    else:
+        # Leave other values unaffected
+        return value
+
+
 
 def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): # (bin_vars_dict, modified_opt_term,
     # modified_damage_opt_term) bin_vars_dict hat die namen der nodes und die variablen, die anderen beiden haben einfach expressions.
@@ -132,8 +148,11 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
 
     # Convert the sympy expression to a dictionary
     objective_dict_whole = objective_expr.as_coefficients_dict()
-    if damage_expression is not None:
-        objective_dict_damage = damage_expression.as_coefficients_dict()
+    if damage_expression is not None and damage_expression != ():
+        try:
+            objective_dict_damage = damage_expression.as_coefficients_dict()
+        except Exception as e:
+            print(damage_expression)
 
         # Merge the two dictionaries
         for term, coeff in objective_dict_damage.items():
@@ -142,6 +161,10 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
             else:
                 objective_dict_whole[term] = coeff
 
+    #Lets see the difference
+    #print(objective_dict_whole)
+    #objective_dict_whole = {key: scale_value(objective_dict_whole,value) for key, value in objective_dict_whole.items()}
+    #print(objective_dict_whole)
 
     # Set the objective
     objective = QuadExpr()
@@ -243,10 +266,10 @@ def main():
     # check_the_q_matrices_gurobi_dwave(
         #"C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests"
         #"\\eco_filtering_dot\\Biosynthesis of amino acids_m.dot")
-    "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
-    "\\eco_filtering_dot\\Citrate_cycle_marked.dot")
-        # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests"
-        # "\\eco_filtering_dot\\Biosynthesis of amino acids.dot")
+        #"C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
+        #"\\hsa_filtering_dot\\Purine_m.dot")
+         "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests"
+         "\\eco_filtering_dot\\Nucleotide metabolism_test.dot")
         # "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
         # "\\Glycerolipid_marked.dot")
         # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots\\hsa_filtering_dot\\Nucleotide metabolism.dot")
@@ -257,6 +280,30 @@ def main():
         #  "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\graphoz\\a.dot")
     # "\\Biosynthesis of amino acids marked.dot")
 
+
+def lain():
+    file_path = ("C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
+        "\\hsa_filtering_dot\\Purine_m.dot")
+
+    q_dict, graph, bin_vars_dict, marked_nodes = get_qubo_dict_for_dwave_qa(file_path)
+    value_counts = {}
+    for value in q_dict.values():
+        if value in value_counts:
+            value_counts[value] += 1
+        else:
+            value_counts[value] = 1
+
+    # Sort the dictionary by values in descending order and filter duplicates
+    sorted_data = sorted(q_dict.items(), key=lambda x: x[1], reverse=True)
+    seen = set()
+    unique_sorted_data = [(k, v) for k, v in sorted_data if not (v in seen or seen.add(v))]
+
+    # Get the top 20 highest unique values
+    top_20_highest = unique_sorted_data[:20]
+
+    # Display the result, including the frequency of each value
+    for key, value in top_20_highest:
+        print(f'Value: {value} - Key: {key} - Occurrences of value: {value_counts[value]}')
 
 if __name__ == '__main__':
     main()

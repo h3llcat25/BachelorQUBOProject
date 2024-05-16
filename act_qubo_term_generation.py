@@ -9,9 +9,10 @@ from tie_qubo_struct import TieQuboStruct
 # Helpfunction for getting predecessors of a specific Node in the .Dot file, Wichtig, gibt ne list of strings zurück
 # Ist Smart, weil wenn es durch die
 def smart_predecessors(graph, target_node_name):
-    target_node = graph.get_node(target_node_name)[0]
-    trgt_node_type = target_node.get('type')
 
+    target_node = graph.get_node(target_node_name)[0]
+
+    trgt_node_type = target_node.get('type')
     if trgt_node_type == "C":
         predecessor_set = {edge.get_source() for edge in graph.get_edges() if edge.get_destination() == target_node_name}
         successor_set = {edge.get_destination() for edge in graph.get_edges() if edge.get_source() == target_node_name}
@@ -20,22 +21,35 @@ def smart_predecessors(graph, target_node_name):
             r_node = graph.get_node(r_node_name)[0]
             if r_node.get('color') is None:
                 r_node.set('color', 'lime')
-
         return list(predecessor_set)
 
     if trgt_node_type == "R":
         predecessor_set = {edge.get_source() for edge in graph.get_edges() if edge.get_destination() == target_node_name}
         if target_node.get('color') is None:
             return list(predecessor_set)
+        # If it is colored (lime), it means, it is a revertable reaktion and it needs different treatment
+            # we take the successor_set of the "Lime" colored reaction node, and substract it from the predecessors
+            # that's how we get only non-reversible predecessors
+        successor_set = {edge.get_destination() for edge in graph.get_edges() if edge.get_source() == target_node_name}
+        non_rev_predecessors = predecessor_set - successor_set
 
-        # If it is lime, it means, it is a revertable Reaktion and it needs different treatment
         if target_node.get('color') == "lime":
-            successor_set = {edge.get_destination() for edge in graph.get_edges() if edge.get_source() == target_node_name}
-            non_rev_predecessors = predecessor_set - successor_set
             return list(non_rev_predecessors)
+        # Tan gibt es nur, wenn der Knoten sonst circuläre inhibitionen auslösen kann.
+        elif target_node.get('color') == "tan":
+            enzyme_preds = set()
+            for node_name in non_rev_predecessors:
+                curr_node = graph.get_node(node_name)
+                if not curr_node:
+                    curr_node = graph.get_node(f"\"{node_name}\"")
+                curr_node = curr_node[0]
+                if curr_node.get('type') == "E":
+                    enzyme_preds.add(node_name)
+            return list(enzyme_preds)
+
 
         else:
-            raise ValueError("sometin wrong with predecessors function")
+            raise ValueError("sometin wrong with smart_predecessors function")
 
 
 # Helpfunction for getting successors of a specific Node in the .Dot file
@@ -181,7 +195,7 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
 
 
 # AKTUELL
-def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_weight):
+def generate_equation(graph, dict_and_sorted_nodes):
     try:
         binary_var_dict, marked_c_nodes, c_nodes, r_nodes, e_nodes = dict_and_sorted_nodes.get_dict_and_lists()
         abstract_var_dict = dict_and_sorted_nodes.get_abstrct_dict()
@@ -201,6 +215,8 @@ def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_we
         all_successors_set_up_reacts = set()
         all_predecessors_set_up_reacts = set()
 
+        real_ones_target_successors_set = set()
+
 ################ Start Set up ##########
 
         # 1.1 Generate the terms for each marked_node x, that it has to get inhibited (1-x)
@@ -208,25 +224,44 @@ def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_we
         for marked_node in marked_c_nodes:
             equation += f'(1 - {binary_var_dict[marked_node]}) + '
 
+            # Make sets for the parent and the child nodes (reaction nodes) from the marked target node
             marked_node_successors = set(successors(graph, marked_node))
             marked_node_predecessors = set(smart_predecessors(graph, marked_node))
 
+            real_ones_target_successors_set.update(marked_node_successors - marked_node_predecessors)
+
             all_successors_set_up_reacts.update(marked_node_successors)
             all_predecessors_set_up_reacts.update(marked_node_predecessors)
+
+        # 1.2 Make a set of c nodes coming out of the reaction nodes, after a target Compound node.
+        # that might create a circular inhibition without enzymes:
+        possible_circular_problem_comps_after_reacts = set()
+        for r_node in real_ones_target_successors_set:
+            # Hier ist ok nur die Successors zu nehmen, weil es egal ist ob es bidirectional ist oder nicht, ausgehend ist ausgehend)
+            possible_circular_problem_comps_after_reacts.update(successors(graph, r_node))
+
+        # 1.3 Go through the real predecessors from a target reaction predecessor. If they have one in common with a
+        # possible circular problem compound, then mark the reaction as a "tan" reaction, so it takes care to
+        # choose a enzyme to inhibit.
+        for pred_r_node_from_t in all_predecessors_set_up_reacts:
+            r_node = graph.get_node(pred_r_node_from_t)
+            r_node = r_node[0]
+            r_node.set('color', 'lime')
+
+            from_target_preds_the_c_preds = smart_predecessors(graph, pred_r_node_from_t)
+            # Check if the sets intersect, to put the color to tan for just choosing an enzyme as a parent inhibitor.
+            if set(from_target_preds_the_c_preds) & possible_circular_problem_comps_after_reacts:
+                r_node.set('color', 'tan')
 
         # 2. Generate the terms for each predecessor and successor node y, that it has to get inhibited (1-y)
         all_set_up_reacts = all_predecessors_set_up_reacts | all_successors_set_up_reacts
         equation += ''.join([f'(1 - {binary_var_dict[node]}) + ' for node in all_set_up_reacts])
 
-        # 3. take out every r_node that is only a successor and not a reversable or a predecessor of a target
-        for r_node in (all_successors_set_up_reacts - all_predecessors_set_up_reacts):
-            r_nodes.remove(r_node)
-
         ####### Ende Set UP ##############
 
         # Automatic Penalty calculation, based on if all Reactions, Enzymes and marked Compounds of the metabolic
         # network are inhibited
-        meta_rulebreak_penalty = int(math.floor(0.5 * len(binary_var_dict)))
+        meta_rulebreak_penalty = 90 #int(math.floor(len(binary_var_dict)))
         print(f'Meta Rulebreaker Penalty is: {meta_rulebreak_penalty}')
 
         equation = f'{meta_rulebreak_penalty}*({equation}'
@@ -250,6 +285,7 @@ def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_we
         # With smart predecessors, the list will automatically handle revertable reactions
         if len(r_nodes) > 0:
             for r_node in r_nodes:  # For all Reaction nodes
+
                 r_smrt_prdcssrs = smart_predecessors(graph, r_node)
                 r_smrt_pred_len = len(r_smrt_prdcssrs)
                 if r_smrt_pred_len > 0:  # If the number of predecessors is bigger than zero.
@@ -264,6 +300,11 @@ def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_we
                         react_pena_term += reaction_reduction_penalty(r_smrt_prdcssrs, binary_var_dict, extra_var_index_r)
                         extra_var_index_r += 1
 
+        enzym_dmg_weight = 1
+        cmp_dmg_weight = 1
+
+
+
         # FIND ME
         # Case 3 Damage Term has different penalty weights: cmp_dmg_weight ++++++++++++++++++++++++++++++++++++
         damage_only_equation += f'{cmp_dmg_weight}* ('
@@ -272,17 +313,18 @@ def generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight, enzym_dmg_we
                 damage_only_equation += f'{binary_var_dict[c_node]} + '
         damage_only_equation = damage_only_equation.rstrip(' + ')
 
-        # Enzyme Damage Term has penalty factor enzym_dmg_weight
-        damage_only_equation += f") + {enzym_dmg_weight}*("
+        '''# Enzyme Damage Term has penalty factor enzym_dmg_weight
+        damage_only_equation += f") + ("# {enzym_dmg_weight}*("
         for e_node in e_nodes:
             damage_only_equation += f'{binary_var_dict[e_node]} + '
         damage_only_equation = damage_only_equation.rstrip(' + ')
         #damage_only_equation += ")"
 
-        damage_only_equation += f") + 3*("
+        damage_only_equation += f") + 2*("
         for r_node in r_nodes:
             damage_only_equation += f'{binary_var_dict[r_node]} + '
-        damage_only_equation = damage_only_equation.rstrip(' + ')
+        damage_only_equation = damage_only_equation.rstrip(' + ')'''
+
         damage_only_equation += ")"
 
         if react_pena_term:
@@ -362,7 +404,7 @@ def generating_qubo_term_from_graph_two_part(file_path, cmp_dmg_weight=5, enzym_
         if dict_and_sorted_nodes.has_seed():
             seed = dict_and_sorted_nodes.get_seed()
         # binary_vars, output_term = generate_equation_auto_penalty(graph, dict_and_sorted_nodes[0],
-        tie_qubo_struct = generate_equation(graph, dict_and_sorted_nodes, cmp_dmg_weight=cmp_dmg_weight, enzym_dmg_weight=enzym_dmg_weight)
+        tie_qubo_struct = generate_equation(graph, dict_and_sorted_nodes)
         return tie_qubo_struct  # Added the
         # information of the target nodes, to color the result node, if no node was marked from the start or the
         # Target(s) was/were randomly chosen
