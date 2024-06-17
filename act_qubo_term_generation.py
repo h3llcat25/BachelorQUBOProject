@@ -141,6 +141,8 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
             return tie_graph_problem
 
         if k: # 2. Case to randomly take marked c_nodes
+            if k > len(c_nodes):
+                return -1
             if seed is None:
                 # Use the current time to generate a random seed
                 seed = int(time.time())
@@ -148,6 +150,7 @@ def create_binary_variables_plus_enzymes(graph, k=None, seed=None):
             # Set the seed for the random number generator for reproducibility
             random.seed(seed)
 
+            print(k)
             # Select k random items from the input list
             marked_c_nodes = random.sample(c_nodes, k)
 
@@ -393,13 +396,16 @@ def compound_reduction_penalty(predecessor_list, binary_var_dict, extra_var_inde
 
 
 # Generate qubo term from graph, but generates two Objective functions, to lower the complexity. -> AKTUELL!
-def generating_qubo_term_from_graph_two_part(file_path, cmp_dmg_weight=5, enzym_dmg_weight=2):
+def generating_qubo_term_from_graph_two_part(file_path, target_nr=None):
     graph = read_dot_file_pydotplus(file_path)
     if not graph:
         print("The Graph is weirdly, None...")
         return None
-    dict_and_sorted_nodes = create_binary_variables_plus_enzymes(graph, 3)  # TODO WICHTIG, ich habe hier  k=3
+
+    dict_and_sorted_nodes = create_binary_variables_plus_enzymes(graph, target_nr)  # TODO WICHTIG, ich habe hier  k=3
     # gesetzt, weil der Polyketide Graph keine diseased Knoten hat!!
+    if dict_and_sorted_nodes == -1:
+        return -1
     if dict_and_sorted_nodes:
         if dict_and_sorted_nodes.has_seed():
             seed = dict_and_sorted_nodes.get_seed()

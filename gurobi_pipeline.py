@@ -116,7 +116,7 @@ def run_gurobi_different_random_targets(file_path):
         return None
 
     # Open a file to write the results
-    with (open(f"gurobi_for_diff_rndm_trgts.txt", "a") as file):
+    with (open(f"gurobi_for_diff_rndm_trgts_eco_large.txt", "a") as file):
         file.write(file_path)
         file.write("\n")
         # Iterate over the combinations and apply the function
@@ -183,7 +183,7 @@ for obj in results_list[:5]:
 
 
 def main():
-    directory = "graphStuff\\largeDots\\mmu_filtering_dot"
+    directory = "graphStuff\\largeDots\\eco_filterin_dot"
 
     abs_directory = os.path.abspath(directory)
 

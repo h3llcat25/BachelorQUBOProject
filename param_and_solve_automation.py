@@ -197,7 +197,7 @@ def solve_qubo_with_gurobi(input_dict, objective_expr, damage_expression=None): 
 
 # Aktuell
 def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(file_path):
-    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path,5,2)
+    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
     bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = tie_qubo_struct.get_dict_objectives_graph_targets()
     variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
 
@@ -243,8 +243,10 @@ def param_search_and_auto_solver_auto_penalty_gurobipy_model_enzymes_and_matrix(
     # print(solution_dict)
 
 
-def get_qubo_dict_for_dwave_qa(file_path):
-    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path)
+def get_qubo_dict_for_dwave_qa(file_path, target_nr=None):
+    tie_qubo_struct = generating_qubo_term_from_graph_two_part(file_path, target_nr)
+    if tie_qubo_struct == -1:
+        return tie_qubo_struct
     bin_vars_dict, optimization_term, output_damage_only, graph, marked_nodes = tie_qubo_struct.get_dict_objectives_graph_targets()
 
     variables = {symbol: symbols(symbol) for symbol in set(bin_vars_dict.values())}
@@ -269,7 +271,8 @@ def main():
         #"C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\smallDots_w_marked_and_tests"
         #"\\hsa_filtering_dot\\Purine_m.dot")
          "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests"
-         "\\eco_filtering_dot\\Nucleotide metabolism_test.dot")
+         "\\hsa_filtering_dot\\Nucleotide metabolism_marked.dot")
+
         # "C:\\Users\\marsh\\Documents\\Python Bachelor\\QUBO_Project_BA\\graphStuff\\smallDots\\eco_filtering_dot"
         # "\\Glycerolipid_marked.dot")
         # "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots\\hsa_filtering_dot\\Nucleotide metabolism.dot")

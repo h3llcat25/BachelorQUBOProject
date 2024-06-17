@@ -29,7 +29,7 @@ def solve_w_simulated_annealing_sampler(qubo):
     sampler = SimulatedAnnealingSampler()
 
     # Solve the QUBO
-    sample_set = sampler.sample_qubo(qubo)
+    sample_set = sampler.sample_qubo(qubo, num_reads=2500)
     return sample_set.first.sample
 
 
@@ -150,15 +150,15 @@ def solver_manager(file_path):
 
     bqm = BinaryQuadraticModel.from_qubo(qubo_matrix)
 
-    # value = "simulated_anneal_qubo"
+    value = "simulated_anneal_qubo"
     # value = "dwave_sampler_fixed_empedding"
-    value = "dwave_quantum"
+    #value = "dwave_quantum"
     # value = "hybrid"
     # value = "exact_bqm"
 
     best_sample = switch_case_if(value, bqm, qubo_matrix)
-    print(best_sample)
-    print(bin_vars_dict)
+    #print(best_sample)
+    #print(bin_vars_dict)
 
     enz_damag, cmp_damag, res_graph, end_filepath = modify_dot_graph(bin_vars_dict, best_sample, file_path, marked_nodes)
 
@@ -167,12 +167,12 @@ def solver_manager(file_path):
     # Write the modified graph back to the new .dot file
     res_graph.del_node('\"\\r\\n\"')
     res_graph.write(end_filepath)
-    print(qubo_matrix)
+    #print(qubo_matrix)
 
 
 # ------- Main program -------
 if __name__ == "__main__":
-    file_path = "/workspaces/graph-coloring/Citrate_cycle_marked.dot"
-    auto_emb_solv_chainstrength(file_path, 37)
+    file_path = "C:\\Users\\marsh\\Documents\\GitHub\\BachelorQUBOProject\\graphStuff\\largeDots_w_marked_and_tests\\hsa_filtering_dot\\Nucleotide metabolism_marked.dot"
+    solver_manager(file_path)
     # solver_manager(file_path)
 
